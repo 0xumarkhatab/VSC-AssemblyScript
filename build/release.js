@@ -30,6 +30,12 @@ async function instantiate(module, imports = {}) {
         key = __liftString(key >>> 0);
         return __lowerString(__module0.db.getObject(key)) || __notnull();
       },
+      "db.setObject"(key, val) {
+        // ~lib/@vsc.eco/sdk/assembly/index/db.setObject(~lib/string/String, ~lib/string/String) => void
+        key = __liftString(key >>> 0);
+        val = __liftString(val >>> 0);
+        __module0.db.setObject(key, val);
+      },
     }),
     bitcoin: Object.assign(Object.create(__module1), {
       Uint8ArrayFromBufferHex(arg0) {

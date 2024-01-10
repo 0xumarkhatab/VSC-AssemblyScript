@@ -16,6 +16,7 @@ import base64 from "base-64"
 import utf8 from "utf8"
 import pkg from '@summa-tx/bitcoin-spv-js';
 import { Obj } from "assemblyscript-json/assembly/JSON"
+import asc from "assemblyscript/dist/asc"
 const { BTCUtils, ValidateSPV, deserializeSPVProof } = pkg;
 
 const __filename = fileURLToPath(import.meta.url);
@@ -447,46 +448,35 @@ void (async () => {
         Math: {},
         bitcoin: {
 
-          Uint8ArrayFromBufferHex: async (hex: number) => {
+          Uint8ArrayFromBufferHex: (hex: number) => {
 
 
-            async function makeAscArray(instance: any, arr: Uint8Array) {
-              console.log("making asc array");
+            function makeAscArray(instance: any, arr: Uint8Array) {
+              try {
+                let arrptr = instance.exports.__newArrayBuffer(new ArrayBuffer(arr.length))
 
-              let arrptr = instance.exports.__newArrayBuffer(new ArrayBuffer(arr.length))
-              // console.log("arrPtr ",arrptr);
-
-              let arrContent = instance.exports.__getArrayBuffer(arrptr)
-              // console.log("arr content before ",arrContent);
-
-              for (let index = 0; index < arr.length; index++) {
-                const element = arr[index];
-                await (instance.instance.exports as any).setU8(arrptr, index, element)
+                for (let index = 0; index < arr.length; index++) {
+                  const element = arr[index];
+                  (instance.instance.exports as any).setU8(arrptr, index, element)
+                }
+                return arrptr;
               }
-              arrContent = instance.exports.__getArrayBuffer(arrptr)
-              // console.log("arr content after ",arrContent);
+              catch (e) {
+                console.log("error in asc Array creation : ", e);
 
-              // console.log(await (insta.instance.exports as any).getU8(arrptr, 0));
-              return arrptr;
+              }
+
             }
 
             try {
               let value = insta.exports.__getString(hex)
-              // console.log("decoding ", value, "\n or ", hex)
-
               const decodeHex = new Uint8Array(Buffer.from(value, 'hex'))
-              // console.log("decode Hex ",decodeHex);
-
-              // decodeHex[0]
-              // console.log("decode hex is ", decodeHex, "first element is ", decodeHex[0]
-              // );
-
-              let asc_ptr = await makeAscArray(insta, decodeHex)
-              // console.log("asc pointer is ", asc_ptr);
+              let asc_ptr = makeAscArray(insta, decodeHex)
+              // let arrContent = insta.exports.__getArrayBuffer(asc_ptr)
+              // console.log("Array made as ", arrContent);
+              // console.log("returning ", asc_ptr);
 
               return asc_ptr
-              //  insta.exports.__newArrayBuffer()
-              //  return decodeHex;
             } catch (error) {
               console.log(" Error in Uint8ArrayFromBuffer ", error);
               return null
@@ -542,12 +532,12 @@ void (async () => {
           }
           ,
           validateHeaderChain: (_decodeHex) => {
-            console.log("hex value is ", _decodeHex);
+            // console.log("hex value is ", _decodeHex);
             let decodeHex = insta.exports.__getArrayBuffer(_decodeHex);
-            console.log("validating ", decodeHex);
+            // console.log("validating ", decodeHex);
 
             const diff = ValidateSPV.validateHeaderChain(decodeHex)
-            console.log("diff", diff);
+            // console.log("diff", diff);
 
 
             return diff;
@@ -565,6 +555,20 @@ void (async () => {
           'console.logNumber': (val) => {
             logs.push(val)
           },
+          'console.logUint8Array': (val) => {
+            let arrContent = (insta as any).exports.__getArrayBuffer(val)
+            console.log("  ", arrContent);
+
+            for (let j = 0; j < arrContent.length; j++) {
+              const element = arrContent[j];
+              console.log(element);
+
+              logs.push(element)
+
+            }
+
+          },
+
           'console.logBool': (val) => {
             logs.push(Boolean(val))
           },
@@ -572,28 +576,29 @@ void (async () => {
 
             const key: string = (insta as any).exports.__getString(keyPtr)
             const val: string = (insta as any).exports.__getString(valPtr)
-            console.log("setting ", keyPtr, " to ", valPtr);
+            console.log("setting ", key, " to ", val);
 
-            IOGas = IOGas + key + val
+            IOGas = IOGas + key.length + val.length
 
             stateCache.set(key, val)
             return 1
           },
-          'db.getObject': async (keyPtr) => {
+          'db.getObject':  (keyPtr) => {
             const key = (insta as any).exports.__getString(keyPtr)
-            let value;
-            if (stateCache.has(key)) {
-              value = stateCache.get(key)
-            } {
-              JSON.stringify(null)
-            }
 
-            const val = JSON.stringify(value)
-
-            IOGas = IOGas + val ? val.length : 0; // Total serialized length of gas
+            let value: string;
+            if (stateCache.has(key))
+              value = (stateCache.get(key))
+            else
+              value = '{}'
 
 
-            return val
+            IOGas = IOGas + (value != '{}' ? value.length : 0); // Total serialized length of gas
+
+            let retVal = (insta as any).exports.__newString(value)
+            // console.log("returning getObject as ", value, retVal, " for ", key);
+
+            return retVal
           },
         },
       } as any)
