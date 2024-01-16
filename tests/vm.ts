@@ -522,10 +522,18 @@ void (async () => {
 
           },
           hash256: (_decodeHex) => {
-            let decodeHex = insta.exports.__getArrayBuffer(_decodeHex);
-            // console.log("headerhash from ", decodeHex);
-            const headerHash = reverseBytes(BTCUtils.hash256(decodeHex));
-            // console.log("headerhash ", headerHash);
+            let decodeHex: ArrayBuffer = insta.exports.__getArrayBuffer(_decodeHex);
+            // Example ArrayBuffer
+            const uint8Array = new Uint8Array(decodeHex);
+
+            // Convert ArrayBuffer to array
+            const arrayFromBuffer: number[] = Array.from(uint8Array);
+            const uint8Array_buffer = Uint8Array.from(arrayFromBuffer);
+            console.log("creating header hash from ts uint8array ",uint8Array_buffer);
+
+            const headerHash =reverseBytes (BTCUtils.hash256(uint8Array_buffer));
+            console.log("headerhash ", headerHash);
+            // utils.bitcoin.BTCUtils.hash256(decodeHex)
 
             return insta.exports.__newString(headerHash)
 
@@ -535,9 +543,15 @@ void (async () => {
             // console.log("hex value is ", _decodeHex);
             let decodeHex = insta.exports.__getArrayBuffer(_decodeHex);
             // console.log("validating ", decodeHex);
+            const uint8Array = new Uint8Array(decodeHex);
 
-            const diff = ValidateSPV.validateHeaderChain(decodeHex)
-            // console.log("diff", diff);
+            // Convert ArrayBuffer to array
+            const arrayFromBuffer: number[] = Array.from(uint8Array);
+            const uint8Array_buffer = Uint8Array.from(arrayFromBuffer);
+            console.log("validating headerchain from ts uint8array ",uint8Array_buffer);
+
+            const diff = parseInt(ValidateSPV.validateHeaderChain(uint8Array_buffer))
+            console.log("diff", diff);
 
 
             return diff;
@@ -583,7 +597,7 @@ void (async () => {
             stateCache.set(key, val)
             return 1
           },
-          'db.getObject':  (keyPtr) => {
+          'db.getObject': (keyPtr) => {
             const key = (insta as any).exports.__getString(keyPtr)
 
             let value: string;

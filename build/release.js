@@ -20,21 +20,15 @@ async function instantiate(module, imports = {}) {
       },
     }),
     sdk: Object.assign(Object.create(__module0), {
-      "console.log"(arg) {
-        // assembly/index/consoleLog(~lib/string/String) => void
-        arg = __liftString(arg >>> 0);
-        __module0.console.log(arg);
-      },
       "db.getObject"(key) {
         // ~lib/@vsc.eco/sdk/assembly/index/db.getObject(~lib/string/String) => ~lib/string/String
         key = __liftString(key >>> 0);
         return __lowerString(__module0.db.getObject(key)) || __notnull();
       },
-      "db.setObject"(key, val) {
-        // ~lib/@vsc.eco/sdk/assembly/index/db.setObject(~lib/string/String, ~lib/string/String) => void
-        key = __liftString(key >>> 0);
-        val = __liftString(val >>> 0);
-        __module0.db.setObject(key, val);
+      "console.log"(arg) {
+        // assembly/index/consoleLog(~lib/string/String) => void
+        arg = __liftString(arg >>> 0);
+        __module0.console.log(arg);
       },
     }),
     bitcoin: Object.assign(Object.create(__module1), {
@@ -62,6 +56,11 @@ async function instantiate(module, imports = {}) {
         // assembly/bitcoin/hash256(~lib/typedarray/Uint8Array) => ~lib/string/String
         decodeHex = __liftTypedArray(Uint8Array, decodeHex >>> 0);
         return __lowerString(__module1.hash256(decodeHex)) || __notnull();
+      },
+      validateHeaderChain(decodeHex) {
+        // assembly/bitcoin/validateHeaderChain(~lib/typedarray/Uint8Array) => f64
+        decodeHex = __liftTypedArray(Uint8Array, decodeHex >>> 0);
+        return __module1.validateHeaderChain(decodeHex);
       },
       base64(str) {
         // assembly/bitcoin/base64(~lib/string/String) => ~lib/string/String

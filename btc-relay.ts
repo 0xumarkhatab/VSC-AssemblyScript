@@ -80,6 +80,7 @@ actions.processHeaders = async (args) => {
             height: prevHeight + 1,
             raw: rawBH
         }
+        
         preheaders[utils.bitcoin.reverseBytes(headerHash)] = {
             ...decodedHeader
         }
@@ -118,7 +119,9 @@ actions.processHeaders = async (args) => {
             }
              */
         }
+        
         prevBlock = preheaders[prevBlock].prevBlock
+        
     }
     
     
