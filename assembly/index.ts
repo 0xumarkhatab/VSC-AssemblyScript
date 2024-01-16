@@ -9,7 +9,7 @@ import { getISODate } from "./Date.ts";
 /***
  * 
  *  basic tests 
- *  Security aspects : PoW retarget - 144 blocks
+ *  Security aspects : PoW retarget - 1440 blocks
  * 
  * 
 
@@ -511,16 +511,12 @@ function processHeaders(args: BTCHeader): void {
 
   // var preHeaderValues: Array<string> = preHeaders.values()
   // var mapKeys: Array<string> = preHeaders.keys()
-  var mapValues: Array<string> = getJsonStringObjectValues(preHeaders);
-  // var mapKeys: Array<string> = getJsonStringObjectKeys(preHeaders);
 
   // printing map
+  var mapValues: Array<string> = getJsonStringObjectValues(preHeaders);
+  var mapKeys: Array<string> = getJsonStringObjectKeys(preHeaders);
   console.log("map values before sorting ");
   printStringArray(mapValues)
-  // printStringArray(mapValues)
-
-
-  // console.log("mapvalues length " + mapValues.length.toString());
 
   for (let i: i32 = 0; i < mapValues.length; i = i + 1) {
     for (let j: i32 = 0; j < mapValues.length - 1; j = j + 1) {
@@ -532,13 +528,18 @@ function processHeaders(args: BTCHeader): void {
         let temp: string = mapValues[j];
         mapValues[j] = mapValues[j + 1];
         mapValues[j + 1] = temp;
+
+        // also swap keys
+        temp = mapKeys[j];
+        mapKeys[j] = mapKeys[j + 1];
+        mapKeys[j + 1] = temp;
       }
     }
   }
   // console.log("map values after sorting ");
   // printStringArray(mapValues)
   // mapValues is sorted
-  let mapKeys: string[] = getJsonStringObjectKeys(preHeaders);
+
   let topHeader: string = mapKeys[0]
   console.log("Top header is " + topHeader);
 
@@ -602,7 +603,7 @@ function processHeaders(args: BTCHeader): void {
      * */
 
     let targetBlock: string = getStringValueFromJsonObject(preHeaders, prevBlock)
-console.log("target block is "+targetBlock);
+    console.log("target block is " + targetBlock);
 
     prevBlock = getStringValueFromJsonObject(targetBlock, "prevBlock")
 
