@@ -1,7 +1,7 @@
 import { JSON, JSONEncoder, JSONDecoder, JSONHandler } from "assemblyscript-json/assembly";
 // @ts-ignore
 import { console, db } from "@vsc.eco/sdk/assembly"
-import { Uint8ArrayFromBufferHex, base64, extractMerkleRootLE, extractPrevBlockLE, extractTimestampStr, hash256, isValidProof, validateHeaderChain } from "./bitcoin.ts"
+import { Uint8ArrayFromBufferHex, base64, extractMerkleRootLE, extractPrevBlockLE, extractTimestampStr, extractTimestampEpoch, hash256, isValidProof, validateHeaderChain } from "./bitcoin.ts"
 import { getISODate } from "./Date.ts";
 
 // import {} from "assemblyscript-json"
@@ -435,14 +435,35 @@ function printHeaderState(h: Map<string, string>): void {
 
 }
 
-function processHeaders(args: BTCHeader): void {
+function printJsonObj(h: JSON.Obj): void {
+  let keys = h.keys;
+  let content = ""
+  for (let j = 0; j < keys.length; j++) {
+    const key = keys[j];
 
+    let val: string = getStringValueFromJsonObject(h.stringify(), key)
+    if (val) {
+      content = content + (key + " : " + val)
+
+    }
+
+  }
+  console.log("{" + content + "}");
+
+
+}
+let retargetBlocksModulo = 10
+let lastRecentTimestamp: number = 0;
+let totalBlocksStreamed = 0
+export function processHeaders(args: string[]): void {
+
+  totalBlocksStreamed = totalBlocksStreamed + 1;
   var preHeaders: string = db.getObject(`pre-headers/main`)
   if (!preHeaders) {
     preHeaders = '{}'
   }
 
-  let headers: Array<string> = args.headers
+  let headers: Array<string> = args
   for (let i: i32 = 0; i < headers.length; i = i + 1) {
 
     // consoleLog("For Header " + i.toString());
@@ -456,7 +477,7 @@ function processHeaders(args: BTCHeader): void {
       // console.log("array inside index.ts is ")
 
       const prevBlock = extractPrevBlockLE(decodeHex);
-      console.log("prevBlock of " + (i + 1).toString() + "th is " + prevBlock);
+      // console.log("prevBlock of " + (i + 1).toString() + "th is " + prevBlock);
 
       if (prevBlock != "") {
         // console.log("it exists")
@@ -464,7 +485,10 @@ function processHeaders(args: BTCHeader): void {
       // console.log(prevBlock);
 
 
-      const timestamp: string = extractTimestampStr(decodeHex)
+      let timestamp: string = extractTimestampStr(decodeHex)
+      let timestampEpoch: number = extractTimestampEpoch(decodeHex)
+
+
       const merkleRoot = extractMerkleRootLE(decodeHex)
       const headerHash = hash256(decodeHex);
       // console.log("header hash is " + headerHash);
@@ -489,13 +513,28 @@ function processHeaders(args: BTCHeader): void {
         // continue;
       }
 
+      let height = prevHeight + 1
+      if (height % retargetBlocksModulo == 0) {
+
+        if (lastRecentTimestamp < timestampEpoch) {
+          console.log("retarget " + " old" + lastRecentTimestamp.toString() + " new " + timestamp.toString());
+
+          timestamp = lastRecentTimestamp.toString()
+        }
+        else {
+          //keep current which is recent most
+          lastRecentTimestamp = parseInt(timestamp)
+        }
+      }
+
+
       let decodedHeader: Header = new Header(
         prevBlock,
         getISODate(timestamp),
         merkleRoot,
         diff,
         diff + prevDiff,
-        prevHeight + 1,
+        height,
         rawBH
       )
 
@@ -513,7 +552,7 @@ function processHeaders(args: BTCHeader): void {
 
   }
 
-  console.log("pre-headers updated to " + preHeaders);
+  // console.log("pre-headers updated to " + preHeaders);
   // console.log("outside headers")
 
   // var preHeaderValues: Array<string> = preHeaders.values()
@@ -522,8 +561,8 @@ function processHeaders(args: BTCHeader): void {
   // printing map
   var mapValues: Array<string> = getJsonStringObjectValues(preHeaders);
   var mapKeys: Array<string> = getJsonStringObjectKeys(preHeaders);
-  console.log("map values before sorting ");
-  printStringArray(mapValues)
+  // console.log("map values before sorting ");
+  // printStringArray(mapValues)
 
   for (let i: i32 = 0; i < mapValues.length; i = i + 1) {
     for (let j: i32 = 0; j < mapValues.length - 1; j = j + 1) {
@@ -548,18 +587,18 @@ function processHeaders(args: BTCHeader): void {
   // mapValues is sorted
 
   let topHeader: string = mapKeys[0]
-  console.log("Top header is " + topHeader);
+  // console.log("Top header is " + topHeader);
 
 
-  console.log("modifying preHeaders");
-  preHeaders='{}';
+  // console.log("modifying preHeaders");
+  preHeaders = '{}';
   for (let j = 0; j < mapKeys.length; j++) {
     const key = mapKeys[j];
-    const val=mapValues[j]
-    preHeaders= setValueInJsonString(preHeaders,key,val)    
+    const val = mapValues[j]
+    preHeaders = setValueInJsonString(preHeaders, key, val)
   }
-  
-// console.log("modified preHeaders "+preHeaders);
+
+  // console.log("modified preHeaders "+preHeaders);
 
   // console.log("Map Now" + mapValues.length.toString())
 
@@ -647,7 +686,7 @@ function processHeaders(args: BTCHeader): void {
   let highestHeight: i64 = 0;
   // let headerKeysArray=[];
   for (let i: i32 = 0; i < blocksToPush.length; i = i + 1) {
-    console.log("Header state modification iteration #" + i.toString());
+    // console.log("Header state modification iteration #" + i.toString());
 
     let __block: string = blocksToPush[i]
     let _height: i64 = getIntegerValueFromJsonObject(__block, "height");
@@ -677,7 +716,7 @@ function processHeaders(args: BTCHeader): void {
       }
       else {
         // json.from '{}'
-        console.log(" null object");
+        // console.log(" null object");
 
         headersState.set(key, "{}")
 
@@ -753,7 +792,7 @@ function processHeaders(args: BTCHeader): void {
   for (let i: i32 = 0; i < headerKeys.length; i = i + 1) {
     let key: string = headerKeys[i]
     let val: string = getStringValueFromJsonObject(preHeaders, key)
-    console.log("setting " + key + " to " + val);
+    // console.log("setting " + key + " to " + val);
 
     let command: string = "headers/" + key;
 
@@ -774,7 +813,9 @@ function processHeaders(args: BTCHeader): void {
 
   // }
   // else
-  console.log("preHeaders/main at the end " + state.toString());
+  console.log("preHeaders/main at the end  ")
+  printJsonObj(state);
+
 
 }
 
@@ -830,17 +871,18 @@ export function getU8(arr: ArrayBuffer, idx: u8): u8 {
 @external('sdk', 'console.log')
 declare function consoleLog(arg: string): void
 
-export function main(): string {
-  let args: BTCHeader = new BTCHeader([
-    "0100000000000000000000000000000000000000000000000000000000000000000000003ba3edfd7a7b12b27ac72c3e67768f617fc81bc3888a51323a9fb8aa4b1e5e4a29ab5f49ffff001d1dac2b7c",
-    "010000006fe28c0ab6f1b372c1a6a246ae63f74f931e8365e15a089c68d6190000000000982051fd1e4ba744bbbe680e1fee14677ba1a3c3540bf7b1cdb606e857233e0e61bc6649ffff001d01e36299",
-    "010000004860eb18bf1b1620e37e9490fc8a427514416fd75159ab86688e9a8300000000d5fdcc541e25de1c7a5addedf24858b8bb665c9f36ef744ee42c316022c90f9bb0bc6649ffff001d08d2bd61",
-    "01000000bddd99ccfda39da1b108ce1a5d70038d0a967bacb68b6b63065f626a0000000044f672226090d85db9a9f2fbfe5f0f9609b387af7be5b7fbb7a1767c831c9e995dbe6649ffff001d05e0ed6d",
-    "010000004944469562ae1c2c74d9a535e00b6f3e40ffbad4f2fda3895501b582000000007a06ea98cd40ba2e3288262b28638cec5337c1456aaf5eedc8e9e5a20f062bdf8cc16649ffff001d2bfee0a9",
-    "0100000085144a84488ea88d221c8bd6c059da090e88f8a2c99690ee55dbba4e00000000e11c48fecdd9e72510ca84f023370c9a38bf91ac5cae88019bee94d24528526344c36649ffff001d1d03e477"
-  ])
-  
-  processHeaders(args);
+export function main(args: string): string {
+  console.log("received headers in main " + args);
+  let obj: JSON.Obj = <JSON.Obj>JSON.parse(args);
+  let keys = obj.keys;
+  let headersArray: string[] = []
+  for (let j = 0; j < keys.length; j++) {
+    const key = keys[j];
+    headersArray.push(getStringValueFromJsonObject(args, key))
+
+  }
+
+  processHeaders(headersArray);
   return "success";
 
 

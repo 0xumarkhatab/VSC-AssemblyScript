@@ -17,6 +17,7 @@ import utf8 from "utf8"
 import pkg from '@summa-tx/bitcoin-spv-js';
 import { Obj } from "assemblyscript-json/assembly/JSON"
 import asc from "assemblyscript/dist/asc"
+import { BTCBlockStream } from "./bitcoin-utils"
 const { BTCUtils, ValidateSPV, deserializeSPVProof } = pkg;
 
 const __filename = fileURLToPath(import.meta.url);
@@ -394,7 +395,7 @@ void (async () => {
   const module = await WebAssembly.compile(binaryData)
 
   async function call(action: string, payload: any) {
-    console.log("calling ", action, " with arguments ", payload);
+    console.log("inside call fn : calling ", action, " with arguments ", payload);
 
     const memory = new WebAssembly.Memory({
       initial: 10,
@@ -512,6 +513,16 @@ void (async () => {
             return insta.exports.__newString(String(timestamp * 1000))
 
           },
+          extractTimestampEpoch: (_decodeHex) => {
+            let decodeHex = insta.exports.__getArrayBuffer(_decodeHex);
+
+            const timestamp = parseInt(reverseBytes(BTCUtils.extractTimestampLE(decodeHex)), 16)
+            // console.log("timestamp", timestamp);
+            return timestamp
+
+          },
+          
+          
           extractMerkleRootLE: (_decodeHex) => {
             let decodeHex = insta.exports.__getArrayBuffer(_decodeHex);
 
@@ -529,10 +540,10 @@ void (async () => {
             // Convert ArrayBuffer to array
             const arrayFromBuffer: number[] = Array.from(uint8Array);
             const uint8Array_buffer = Uint8Array.from(arrayFromBuffer);
-            console.log("creating header hash from ts uint8array ",uint8Array_buffer);
+            // console.log("creating header hash from ts uint8array ", uint8Array_buffer);
 
-            const headerHash =reverseBytes (BTCUtils.hash256(uint8Array_buffer));
-            console.log("headerhash ", headerHash);
+            const headerHash = reverseBytes(BTCUtils.hash256(uint8Array_buffer));
+            // console.log("headerhash ", headerHash);
             // utils.bitcoin.BTCUtils.hash256(decodeHex)
 
             return insta.exports.__newString(headerHash)
@@ -548,10 +559,10 @@ void (async () => {
             // Convert ArrayBuffer to array
             const arrayFromBuffer: number[] = Array.from(uint8Array);
             const uint8Array_buffer = Uint8Array.from(arrayFromBuffer);
-            console.log("validating headerchain from ts uint8array ",uint8Array_buffer);
+            // console.log("validating headerchain from ts uint8array ", uint8Array_buffer);
 
             const diff = parseInt(ValidateSPV.validateHeaderChain(uint8Array_buffer))
-            console.log("diff", diff);
+            // console.log("diff", diff);
 
 
             return diff;
@@ -590,7 +601,7 @@ void (async () => {
 
             const key: string = (insta as any).exports.__getString(keyPtr)
             const val: string = (insta as any).exports.__getString(valPtr)
-            console.log("setting ", key, " to ", val);
+            // console.log("setting ", key, " to ", val);
 
             IOGas = IOGas + key.length + val.length
 
@@ -630,7 +641,7 @@ void (async () => {
       let ptr;
       try {
         ptr = await (insta.instance.exports[action] as any)
-          (payload && (insta as any).exports.__newString(JSON.stringify(payload)))
+          ( payload && (insta as any).exports.__newString(JSON.stringify(payload)))
 
         const str = (insta as any).exports.__getString(ptr)
         return {
@@ -676,7 +687,43 @@ void (async () => {
   }
   //Run your tests here
 
-  const result = await call('main')
+  // const result = await call('main')
+  console.log("calling btc block_stream");
+  const abortController = new AbortController()
+  let headerBulk = []
+  let busyPromise = null;
+  let topBlock = 0
+  let totalBlocksStreamed=0
+  let blockRound={}
+  for await (let header of BTCBlockStream({
+    height: topBlock + 1,
+    signal: abortController.signal,
+    continueHead: true,
+  })) {
+    
+    totalBlocksStreamed+=1
+    blockRound[totalBlocksStreamed]=header.rawData;
 
-  console.log(result)
+    console.log(totalBlocksStreamed);
+    
+    if (totalBlocksStreamed == 15) {
+      // console.log("call process headers after ");
+      const result = await call('main',(blockRound))
+      console.log(result);
+      
+      blockRound={}
+      totalBlocksStreamed=0
+      break;
+      // busyPromise = processHeadersTx()
+    }
+    if (busyPromise) {
+      await busyPromise
+      busyPromise = null
+      break
+    }
+  }
+  // console.log(res);
+
+
+  // console.log(result)
 })()

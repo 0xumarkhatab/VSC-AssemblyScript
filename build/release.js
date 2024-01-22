@@ -41,7 +41,7 @@ async function instantiate(module, imports = {}) {
       Uint8ArrayFromBufferHex(arg0) {
         // assembly/bitcoin/Uint8ArrayFromBufferHex(~lib/string/String) => ~lib/typedarray/Uint8Array
         arg0 = __liftString(arg0 >>> 0);
-        return __lowerTypedArray(Uint8Array, 9, 0, __module1.Uint8ArrayFromBufferHex(arg0)) || __notnull();
+        return __lowerTypedArray(Uint8Array, 6, 0, __module1.Uint8ArrayFromBufferHex(arg0)) || __notnull();
       },
       extractPrevBlockLE(decodeHex) {
         // assembly/bitcoin/extractPrevBlockLE(~lib/typedarray/Uint8Array) => ~lib/string/String
@@ -52,6 +52,11 @@ async function instantiate(module, imports = {}) {
         // assembly/bitcoin/extractTimestampStr(~lib/typedarray/Uint8Array) => ~lib/string/String
         decodeHex = __liftTypedArray(Uint8Array, decodeHex >>> 0);
         return __lowerString(__module1.extractTimestampStr(decodeHex)) || __notnull();
+      },
+      extractTimestampEpoch(decodeHex) {
+        // assembly/bitcoin/extractTimestampEpoch(~lib/typedarray/Uint8Array) => f64
+        decodeHex = __liftTypedArray(Uint8Array, decodeHex >>> 0);
+        return __module1.extractTimestampEpoch(decodeHex);
       },
       extractMerkleRootLE(decodeHex) {
         // assembly/bitcoin/extractMerkleRootLE(~lib/typedarray/Uint8Array) => ~lib/string/String
@@ -85,6 +90,11 @@ async function instantiate(module, imports = {}) {
   const { exports } = await WebAssembly.instantiate(module, adaptedImports);
   const memory = exports.memory || imports.env.memory;
   const adaptedExports = Object.setPrototypeOf({
+    processHeaders(args) {
+      // assembly/index/processHeaders(~lib/array/Array<~lib/string/String>) => void
+      args = __lowerArray((pointer, value) => { __setU32(pointer, __lowerString(value) || __notnull()); }, 5, 2, args) || __notnull();
+      exports.processHeaders(args);
+    },
     setU8(arr, idx, value) {
       // assembly/index/setU8(~lib/arraybuffer/ArrayBuffer, u8, u8) => void
       arr = __lowerBuffer(arr) || __notnull();
@@ -95,9 +105,10 @@ async function instantiate(module, imports = {}) {
       arr = __lowerBuffer(arr) || __notnull();
       return exports.getU8(arr, idx);
     },
-    main() {
-      // assembly/index/main() => ~lib/string/String
-      return __liftString(exports.main() >>> 0);
+    main(args) {
+      // assembly/index/main(~lib/string/String) => ~lib/string/String
+      args = __lowerString(args) || __notnull();
+      return __liftString(exports.main(args) >>> 0);
     },
     createBufferFromBase64(base64String) {
       // assembly/index/createBufferFromBase64(~lib/string/String) => ~lib/string/String
@@ -130,6 +141,21 @@ async function instantiate(module, imports = {}) {
       memoryU16 = new Uint16Array(memory.buffer);
     for (let i = 0; i < length; ++i) memoryU16[(pointer >>> 1) + i] = value.charCodeAt(i);
     return pointer;
+  }
+  function __lowerArray(lowerElement, id, align, values) {
+    if (values == null) return 0;
+    const
+      length = values.length,
+      buffer = exports.__pin(exports.__new(length << align, 1)) >>> 0,
+      header = exports.__pin(exports.__new(16, id)) >>> 0;
+    __setU32(header + 0, buffer);
+    __dataview.setUint32(header + 4, buffer, true);
+    __dataview.setUint32(header + 8, length << align, true);
+    __dataview.setUint32(header + 12, length, true);
+    for (let i = 0; i < length; ++i) lowerElement(buffer + (i << align >>> 0), values[i]);
+    exports.__unpin(buffer);
+    exports.__unpin(header);
+    return header;
   }
   function __liftTypedArray(constructor, pointer) {
     if (!pointer) return null;
@@ -176,6 +202,7 @@ async function instantiate(module, imports = {}) {
 }
 export const {
   memory,
+  processHeaders,
   setU8,
   getU8,
   main,
