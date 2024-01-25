@@ -1,8 +1,9 @@
 import { JSON, JSONEncoder, JSONDecoder, JSONHandler } from "assemblyscript-json/assembly";
 // @ts-ignore
 import { console, db } from "@vsc.eco/sdk/assembly"
-import { Uint8ArrayFromBufferHex, base64, extractMerkleRootLE, extractPrevBlockLE, extractTimestampStr, extractTimestampEpoch, hash256, isValidProof, validateHeaderChain } from "./bitcoin.ts"
-import { getISODate } from "./Date.ts";
+import { Uint8ArrayFromBufferHex, base64, extractMerkleRootLE, extractPrevBlockLE, extractTimestampStr, extractTimestampEpoch, hash256, isValidProof, validateHeaderChain, retarget } from "./bitcoin.ts"
+import { getEpochTime, getISODate } from "./Date.ts";
+import { deleteKeyFromObject } from "./json_manipulation.ts";
 
 // import {} from "assemblyscript-json"
 //
@@ -114,7 +115,7 @@ class Header {
     obj.set("totalDiff", this.totalDiff)
     obj.set("height", this.height)
     obj.set("raw", this.raw);
-    console.log(obj.stringify());
+    // console.log(obj.stringify());
 
     return obj.stringify()
 
@@ -307,7 +308,7 @@ function getStringValueFromJsonObject(jsonObject: string, valName: string): stri
   // console.log("getting value for " + valName + " from " + jsonObject);
 
   if (isNullObject(jsonObject)) {
-    console.log("NULL object");
+    // console.log("NULL object");
 
     return "";
   }
@@ -369,7 +370,7 @@ function getJsonStringObjectValues(jsonObject: string): string[] {
   var obj: JSON.Obj = <JSON.Obj>JSON.parse(jsonObject);
 
   let keys = obj.keys
-  console.log("object keys length " + keys.length.toString());
+  // console.log("object keys length " + keys.length.toString());
 
   var _arr = new Array<string>(keys.length)
   // console.log("object values are ");
@@ -452,18 +453,81 @@ function printJsonObj(h: JSON.Obj): void {
 
 
 }
-let retargetBlocksModulo = 10
-let lastRecentTimestamp: number = 0;
-let totalBlocksStreamed = 0
+
+
+/**
+ * 
+ * sort Map values and map keys ( Pre-headers object)
+ * 
+ */
+function quicksort(mapValues: Array<string>, mapKeys: Array<string>, low: i32, high: i32): void {
+  if (low < high) {
+    let pi: i32 = partition(mapValues, mapKeys, low, high);
+    quicksort(mapValues, mapKeys, low, pi - 1);
+    quicksort(mapValues, mapKeys, pi + 1, high);
+  }
+}
+
+function partition(mapValues: Array<string>, mapKeys: Array<string>, low: i32, high: i32): i32 {
+  let pivot: i32 = i32(getIntegerValueFromJsonObject(mapValues[high], "totalDiff"))
+  let i: i32 = low - 1;
+
+  for (let j: i32 = low; j < high; j = j + 1) {
+    let val1 = i32(getIntegerValueFromJsonObject(mapValues[j], "totalDiff"));
+
+    if (val1 > pivot) {
+      i = i + 1;
+
+      // Swap mapValues[i] and mapValues[j]
+      let tempValue: string = mapValues[i];
+      mapValues[i] = mapValues[j];
+      mapValues[j] = tempValue;
+
+      // Swap mapKeys[i] and mapKeys[j]
+      let tempKey: string = mapKeys[i];
+      mapKeys[i] = mapKeys[j];
+      mapKeys[j] = tempKey;
+    }
+  }
+
+  // Swap mapValues[i + 1] and mapValues[high]
+  let tempValue: string = mapValues[i + 1];
+  mapValues[i + 1] = mapValues[high];
+  mapValues[high] = tempValue;
+
+  // Swap mapKeys[i + 1] and mapKeys[high]
+  let tempKey: string = mapKeys[i + 1];
+  mapKeys[i + 1] = mapKeys[high];
+  mapKeys[high] = tempKey;
+
+  return i + 1;
+}
+
+/**
+ * 
+ * 
+ */
+
+//
+let retargetBlocksModulo: i64 = 10
+let lastRecentTimestamp: i32 = 0;
+// let totalBlocksStreamed: i64 = 0
+let latestDiff: i32 = 0;
+let commulativeDiff: i64 = 0
+
+
 export function processHeaders(args: string[]): void {
 
-  totalBlocksStreamed = totalBlocksStreamed + 1;
   var preHeaders: string = db.getObject(`pre-headers/main`)
   if (!preHeaders) {
     preHeaders = '{}'
   }
 
   let headers: Array<string> = args
+  console.log("----------------------------------------------");
+
+  console.log("storing " + headers.length.toString() + " headers in pre-headers" );
+
   for (let i: i32 = 0; i < headers.length; i = i + 1) {
 
     // consoleLog("For Header " + i.toString());
@@ -486,7 +550,7 @@ export function processHeaders(args: string[]): void {
 
 
       let timestamp: string = extractTimestampStr(decodeHex)
-      let timestampEpoch: number = extractTimestampEpoch(decodeHex)
+      // let timestampEpoch: number = extractTimestampEpoch(decodeHex)
 
 
       const merkleRoot = extractMerkleRootLE(decodeHex)
@@ -502,7 +566,7 @@ export function processHeaders(args: string[]): void {
         prevDiff = 0;
         prevHeight = -1;
       } else if (!isNullObject(getStringValueFromJsonObject(preHeaders, prevBlock))) {
-        console.log("updating height");
+        // console.log("updating height");
 
         let prevBlockVal: string = getStringValueFromJsonObject(preHeaders, prevBlock);
         prevDiff = getIntegerValueFromJsonObject(prevBlockVal, "totalDiff")
@@ -514,18 +578,6 @@ export function processHeaders(args: string[]): void {
       }
 
       let height = prevHeight + 1
-      if (height % retargetBlocksModulo == 0) {
-
-        if (lastRecentTimestamp < timestampEpoch) {
-          console.log("retarget " + " old" + lastRecentTimestamp.toString() + " new " + timestamp.toString());
-
-          timestamp = lastRecentTimestamp.toString()
-        }
-        else {
-          //keep current which is recent most
-          lastRecentTimestamp = parseInt(timestamp)
-        }
-      }
 
 
       let decodedHeader: Header = new Header(
@@ -551,6 +603,10 @@ export function processHeaders(args: string[]): void {
 
 
   }
+  console.log("stored");
+
+  console.log("----------------------------------------------");
+
 
   // console.log("pre-headers updated to " + preHeaders);
   // console.log("outside headers")
@@ -559,29 +615,20 @@ export function processHeaders(args: string[]): void {
   // var mapKeys: Array<string> = preHeaders.keys()
 
   // printing map
+  
+  console.log("getting keys and values of pre-headers ");
+  
   var mapValues: Array<string> = getJsonStringObjectValues(preHeaders);
   var mapKeys: Array<string> = getJsonStringObjectKeys(preHeaders);
   // console.log("map values before sorting ");
   // printStringArray(mapValues)
+  console.log("----------------------------------------------");
 
-  for (let i: i32 = 0; i < mapValues.length; i = i + 1) {
-    for (let j: i32 = 0; j < mapValues.length - 1; j = j + 1) {
-      let val1 = getIntegerValueFromJsonObject(mapValues[j], "totalDiff");
-      let val2 = getIntegerValueFromJsonObject(mapValues[j + 1], "totalDiff");
+  console.log("sorting " + mapValues.length.toString() + " items");
+  quicksort(mapValues, mapKeys, 0, mapValues.length - 1);
+  console.log("sorted ");
+  console.log("----------------------------------------------");
 
-      if (val1 < val2) {
-        // console.log("swapping " + mapValues[j] + " and " + mapValues[j + 1]);
-        let temp: string = mapValues[j];
-        mapValues[j] = mapValues[j + 1];
-        mapValues[j + 1] = temp;
-
-        // also swap keys
-        temp = mapKeys[j];
-        mapKeys[j] = mapKeys[j + 1];
-        mapKeys[j + 1] = temp;
-      }
-    }
-  }
   // console.log("map values after sorting ");
   // printStringArray(mapValues)
   // mapValues is sorted
@@ -592,11 +639,18 @@ export function processHeaders(args: string[]): void {
 
   // console.log("modifying preHeaders");
   preHeaders = '{}';
+  console.log("----------------------------------------------");
+
+  console.log("storing " + mapKeys.length.toString() + "keys in preheaders");
+
   for (let j = 0; j < mapKeys.length; j++) {
     const key = mapKeys[j];
     const val = mapValues[j]
     preHeaders = setValueInJsonString(preHeaders, key, val)
   }
+  console.log("stored");
+
+  console.log("----------------------------------------------");
 
   // console.log("modified preHeaders "+preHeaders);
 
@@ -609,6 +663,9 @@ export function processHeaders(args: string[]): void {
   // @ts-ignore
   let prevBlock: string = '';
 
+  console.log("----------------------------------------------");
+  console.log("validating " + mapValues.length.toString() + " blocks on depth " + validity_depth.toString());
+
   let idx: i32 = 0
   for (; ;) {
     // console.log("idx is " + idx.toString());
@@ -616,7 +673,7 @@ export function processHeaders(args: string[]): void {
     // console.log("PREv block is " + prevBlock);
 
     if (idx >= mapValues.length) {
-      console.log("breaking loop");
+      // console.log("breaking loop");
 
       break;
     }
@@ -641,7 +698,7 @@ export function processHeaders(args: string[]): void {
         curDepth = curDepth + 1;
       }
     } else {
-      console.log("breaking loop cause preHeaders dont contain " + prevBlock);
+      // console.log("breaking loop cause preHeaders dont contain " + prevBlock);
 
       break;
     }
@@ -668,31 +725,43 @@ export function processHeaders(args: string[]): void {
 
   }
   blocksToPush = blocksToPush.slice(0, idx)
+  console.log("validated ");
+  console.log("----------------------------------------------");
+
   // console.log("pre-headers after sorting " + preHeaders);
   // return
-  console.log("Blocks to Push are " + idx.toString())
-  for (let i: i32 = 0; i < blocksToPush.length; i = i + 1) {
-    console.log(blocksToPush[i]);
+  console.log("#Blocks to Push are " + idx.toString())
+  // for (let i: i32 = 0; i < blocksToPush.length; i = i + 1) {
+  //   // console.log(blocksToPush[i]);
 
-    // let h: Header = Header.from(blocksToPush[i]);
-    // h.print()
+  //   // let h: Header = Header.from(blocksToPush[i]);
+  //   // h.print()
 
-  }
+  // }
 
 
-  console.log("Header state before pushing the blocks ")
-  printHeaderState(headersState);
+  // console.log("Header state before pushing the blocks ")
+  // printHeaderState(headersState);
+  console.log("----------------------------------------------");
+  console.log("Applying height threshold and retargeting algorithm ");
 
   let highestHeight: i64 = 0;
   // let headerKeysArray=[];
   for (let i: i32 = 0; i < blocksToPush.length; i = i + 1) {
-    // console.log("Header state modification iteration #" + i.toString());
 
     let __block: string = blocksToPush[i]
+    // console.log(__block);
+
     let _height: i64 = getIntegerValueFromJsonObject(__block, "height");
     let _block_raw = getStringValueFromJsonObject(__block, "raw");
+    let dateString = getStringValueFromJsonObject(__block, "timestamp")
+    // console.log(dateString);
+
+    let timestamp = (getEpochTime(dateString))
 
     // console.log("height is " + _height.toString());
+    // console.log("timestamp is " + timestamp.toString());
+
     // console.log("raw is " + _block_raw);
 
 
@@ -733,7 +802,7 @@ export function processHeaders(args: string[]): void {
 
       // if block height is zero 
       let h: string = headersState.get(key)
-      console.log("h " + h);
+      // console.log("h " + h);
 
       // let headerStateInstance: Header = Header.from(h.stringify())
       let keyHeader = headersState.get(key)
@@ -756,7 +825,22 @@ export function processHeaders(args: string[]): void {
     }
 
 
+    commulativeDiff = commulativeDiff + i32(getIntegerValueFromJsonObject(__block, "diff"))
+
+    if (_height % retargetBlocksModulo == 0) {
+      // currentPreHeaderMap read it's timestamp
+      console.log("retarget " + " old timestamp: " + lastRecentTimestamp.toString() + " new timestamp : " + timestamp.toString());
+      latestDiff = retarget(latestDiff, lastRecentTimestamp, timestamp);
+      console.log("difficulty adjusted to " + latestDiff.toString());
+      lastRecentTimestamp = (timestamp)
+
+
+    }
+
   }
+  console.log("height and retargeting applied ");
+
+  console.log("----------------------------------------------");
 
 
   // return
@@ -765,31 +849,47 @@ export function processHeaders(args: string[]): void {
   let preheaderKeys = getJsonStringObjectKeys(preHeaders)
 
   // clearing it
+  console.log("----------------------------------------------");
+  console.log("clearing pre-headers with size of " + preheaderKeys.length.toString());
 
   for (let i: i32 = 0; i < preheaderKeys.length; i = i + 1) {
+
     let key: string = preheaderKeys[i]
     let currentPreHeaderMap: string = getStringValueFromJsonObject(preHeaders, key)
-
     let height: i64 = i64(getIntegerValueFromJsonObject(currentPreHeaderMap, "height"))
+
     if (highestHeight >= height) {
       // console.log("highestHeight" + highestHeight.toString())
       // console.log("current key highest" + height.toString())
 
       // preHeaders.delete(key);
-      preHeaders = deleteValueInJsonString(preHeaders, key);
+      preHeaders = deleteKeyFromObject(preHeaders, key);
 
+    } else {
+      console.log("highestHeight := " + highestHeight.toString())
+      console.log("current key highest := " + height.toString())
+
+      break;
     }
   }
+  console.log("cleared ");
+
+  console.log("----------------------------------------------");
+
   // console.log("preHeaders after highest height threshhold " + preHeaders);
   // console.log("--------Header state-------");
 
   let headerKeys = headersState.keys()
-
+  console.log("----------------------------------------------");
   console.log("Header state after pushing the blocks ")
   printHeaderState(headersState);
 
+  console.log("----------------------------------------------");
+
+  console.log("storing header key value pairs with size of " + headerKeys.length.toString());
 
   for (let i: i32 = 0; i < headerKeys.length; i = i + 1) {
+
     let key: string = headerKeys[i]
     let val: string = getStringValueFromJsonObject(preHeaders, key)
     // console.log("setting " + key + " to " + val);
@@ -804,8 +904,13 @@ export function processHeaders(args: string[]): void {
 
   }
 
-  db.setObject('pre-headers/main', preHeaders)
 
+  db.setObject('pre-headers/main', preHeaders)
+  console.log("----------------------------------------------");
+
+  console.log("stored pre-headers/main");
+
+  console.log("______________________________________");
 
   let state: JSON.Obj = <JSON.Obj>JSON.parse(db.getObject('pre-headers/main'));
   // if (isNullObject(state)) {
@@ -813,8 +918,6 @@ export function processHeaders(args: string[]): void {
 
   // }
   // else
-  console.log("preHeaders/main at the end  ")
-  printJsonObj(state);
 
 
 }
@@ -872,11 +975,16 @@ export function getU8(arr: ArrayBuffer, idx: u8): u8 {
 declare function consoleLog(arg: string): void
 
 export function main(args: string): string {
-  console.log("received headers in main " + args);
+  console.log("inside main");
+
+  // console.log("received headers in main " + args);
   let obj: JSON.Obj = <JSON.Obj>JSON.parse(args);
   let keys = obj.keys;
   let headersArray: string[] = []
+  console.log("processing " + keys.length.toString() + " blocks");
+
   for (let j = 0; j < keys.length; j++) {
+
     const key = keys[j];
     headersArray.push(getStringValueFromJsonObject(args, key))
 

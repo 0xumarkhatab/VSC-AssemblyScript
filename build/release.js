@@ -1,10 +1,12 @@
 import * as __import0 from "sdk";
 import * as __import1 from "bitcoin";
 import * as __import2 from "Date";
+import * as __import3 from "json_manipulation";
 async function instantiate(module, imports = {}) {
   const __module0 = imports.sdk;
   const __module1 = imports.bitcoin;
   const __module2 = imports.Date;
+  const __module3 = imports.json_manipulation;
   const adaptedImports = {
     env: Object.assign(Object.create(globalThis), imports.env || {}, {
       abort(message, fileName, lineNumber, columnNumber) {
@@ -53,11 +55,6 @@ async function instantiate(module, imports = {}) {
         decodeHex = __liftTypedArray(Uint8Array, decodeHex >>> 0);
         return __lowerString(__module1.extractTimestampStr(decodeHex)) || __notnull();
       },
-      extractTimestampEpoch(decodeHex) {
-        // assembly/bitcoin/extractTimestampEpoch(~lib/typedarray/Uint8Array) => f64
-        decodeHex = __liftTypedArray(Uint8Array, decodeHex >>> 0);
-        return __module1.extractTimestampEpoch(decodeHex);
-      },
       extractMerkleRootLE(decodeHex) {
         // assembly/bitcoin/extractMerkleRootLE(~lib/typedarray/Uint8Array) => ~lib/string/String
         decodeHex = __liftTypedArray(Uint8Array, decodeHex >>> 0);
@@ -84,6 +81,19 @@ async function instantiate(module, imports = {}) {
         // assembly/Date/getISODate(~lib/string/String) => ~lib/string/String
         timestamp = __liftString(timestamp >>> 0);
         return __lowerString(__module2.getISODate(timestamp)) || __notnull();
+      },
+      getEpochTime(dateString) {
+        // assembly/Date/getEpochTime(~lib/string/String) => i32
+        dateString = __liftString(dateString >>> 0);
+        return __module2.getEpochTime(dateString);
+      },
+    }),
+    json_manipulation: Object.assign(Object.create(__module3), {
+      deleteKeyFromObject(obj, key) {
+        // assembly/json_manipulation/deleteKeyFromObject(~lib/string/String, ~lib/string/String) => ~lib/string/String
+        obj = __liftString(obj >>> 0);
+        key = __liftString(key >>> 0);
+        return __lowerString(__module3.deleteKeyFromObject(obj, key)) || __notnull();
       },
     }),
   };
@@ -215,6 +225,7 @@ export const {
     sdk: __maybeDefault(__import0),
     bitcoin: __maybeDefault(__import1),
     Date: __maybeDefault(__import2),
+    json_manipulation: __maybeDefault(__import3),
   }
 ))(new URL("release.wasm", import.meta.url));
 function __maybeDefault(module) {

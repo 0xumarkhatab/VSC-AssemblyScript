@@ -2,6 +2,7 @@
 
 import * as fs from "fs/promises"
 import path from "path"
+import { headers } from "./../blocks"
 // utlities 
 
 
@@ -18,7 +19,7 @@ import pkg from '@summa-tx/bitcoin-spv-js';
 import { Obj } from "assemblyscript-json/assembly/JSON"
 import asc from "assemblyscript/dist/asc"
 import { BTCBlockStream } from "./bitcoin-utils"
-const { BTCUtils, ValidateSPV, deserializeSPVProof } = pkg;
+const { BTCUtils, ValidateSPV, deserializeSPVProof, } = pkg;
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -395,7 +396,7 @@ void (async () => {
   const module = await WebAssembly.compile(binaryData)
 
   async function call(action: string, payload: any) {
-    console.log("inside call fn : calling ", action, " with arguments ", payload);
+    // console.log("inside call fn : calling ", action, " with arguments ", payload);
 
     const memory = new WebAssembly.Memory({
       initial: 10,
@@ -440,11 +441,35 @@ void (async () => {
         Date: {
           getISODate: (timestamp) => {
             let epochTime = insta.exports.__getString(timestamp)
-            console.log("time stamp is ", epochTime);
+            // console.log("time stamp is ", epochTime);
 
             return insta.exports.__newString(new Date(parseInt(epochTime)).toISOString())
           },
+          getEpochTime: (dateString) => {
+            let _datestring = insta.exports.__getString(dateString)
+            // console.log(
+            //   "datestring",_datestring
+            // );
 
+            const unixEpochTimeInSeconds: number = new Date(_datestring).getTime() / 1000;
+
+            // console.log("ret time ",unixEpochTimeInSeconds);
+            return unixEpochTimeInSeconds
+
+          }
+
+        },
+        json_manipulation: {
+          deleteKeyFromObject: (obj:any,key:string) => {
+            let stringified= insta.exports.__getString(obj)
+            let parsed: { [key: string]: string } = JSON.parse(stringified);
+            // console.log("deleting");
+
+            // Deleting key '3'
+            delete parsed[key];
+            return insta.exports.__newString(JSON.stringify(parsed))
+
+          }
         },
         Math: {},
         bitcoin: {
@@ -498,11 +523,16 @@ void (async () => {
             let decodeHex = insta.exports.__getArrayBuffer(_decodeHex);
             // console.log("extracting prevBlock from ", decodeHex);
 
-
+            // BTCUtils.retargetAlgorithm()
             const prevBlock = reverseBytes(BTCUtils.extractPrevBlockLE(decodeHex));
             // console.log("prevblock", prevBlock);
 
             return insta.exports.__newString(prevBlock)
+          },
+          retarget: (previousTarget: any, first_timestamp: any, last_timestamp: any) => {
+
+            return parseInt(BTCUtils.retargetAlgorithm(BigInt(previousTarget), first_timestamp, last_timestamp))
+
           },
 
           extractTimestampStr: (_decodeHex) => {
@@ -521,8 +551,8 @@ void (async () => {
             return timestamp
 
           },
-          
-          
+
+
           extractMerkleRootLE: (_decodeHex) => {
             let decodeHex = insta.exports.__getArrayBuffer(_decodeHex);
 
@@ -574,6 +604,8 @@ void (async () => {
         sdk: {
           'console.log': (keyPtr) => {
             const logMsg = (insta as any).exports.__getString(keyPtr)
+            console.log(logMsg);
+
             logs.push(logMsg)
             IOGas = IOGas + logMsg.length
           },
@@ -641,7 +673,7 @@ void (async () => {
       let ptr;
       try {
         ptr = await (insta.instance.exports[action] as any)
-          ( payload && (insta as any).exports.__newString(JSON.stringify(payload)))
+          (payload && (insta as any).exports.__newString(JSON.stringify(payload)))
 
         const str = (insta as any).exports.__getString(ptr)
         return {
@@ -693,35 +725,45 @@ void (async () => {
   let headerBulk = []
   let busyPromise = null;
   let topBlock = 0
-  let totalBlocksStreamed=0
-  let blockRound={}
-  for await (let header of BTCBlockStream({
-    height: topBlock + 1,
-    signal: abortController.signal,
-    continueHead: true,
-  })) {
-    
-    totalBlocksStreamed+=1
-    blockRound[totalBlocksStreamed]=header.rawData;
+  let totalBlocksStreamed = 0
+  let blockRound = {}
+  console.log("total blocks captured ", headers.length);
 
-    console.log(totalBlocksStreamed);
-    
-    if (totalBlocksStreamed == 15) {
-      // console.log("call process headers after ");
-      const result = await call('main',(blockRound))
-      console.log(result);
-      
-      blockRound={}
-      totalBlocksStreamed=0
-      break;
-      // busyPromise = processHeadersTx()
+
+
+  // for await (let header of BTCBlockStream({
+  //   height: topBlock + 1,
+  //   signal: abortController.signal,
+  //   continueHead: true,
+  // })) 
+
+
+  for (let index = 0; index < headers.length; index++) {
+    const header = headers[index];
+    totalBlocksStreamed += 1;
+    blockRound[totalBlocksStreamed] = header;
+
+    if (totalBlocksStreamed === 2000) {
+      // Call 'main' function and get the result
+      console.log("calling main with upto block#"+(index+1).toString());
+
+      const result = await call('main', blockRound);
+      // console.log(result.logs);
+
+      // Reset blockRound and totalBlocksStreamed
+      blockRound = {};
+      totalBlocksStreamed = 0;
     }
+
+    // Add any other logic you need here
+
     if (busyPromise) {
-      await busyPromise
-      busyPromise = null
-      break
+      await busyPromise;
+      busyPromise = null;
     }
   }
+
+
   // console.log(res);
 
 
