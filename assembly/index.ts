@@ -509,7 +509,7 @@ function partition(mapValues: Array<string>, mapKeys: Array<string>, low: i32, h
  */
 
 //
-let retargetBlocksModulo: i64 = 10
+let retargetBlocksModulo: i64 = 1440
 let lastRecentTimestamp: i32 = 0;
 // let totalBlocksStreamed: i64 = 0
 let latestDiff: i32 = 0;
@@ -615,7 +615,7 @@ export function processHeaders(args: string[]): void {
   // var mapKeys: Array<string> = preHeaders.keys()
 
   // printing map
-  
+
   console.log("getting keys and values of pre-headers ");
   
   var mapValues: Array<string> = getJsonStringObjectValues(preHeaders);
@@ -820,7 +820,7 @@ export function processHeaders(args: string[]): void {
 
     }
     if (highestHeight < _height) {
-      // console.log("updating highest height");
+      console.log("updating highest height to "+highestHeight.toString());
       highestHeight = _height
     }
 
@@ -857,8 +857,11 @@ export function processHeaders(args: string[]): void {
     let key: string = preheaderKeys[i]
     let currentPreHeaderMap: string = getStringValueFromJsonObject(preHeaders, key)
     let height: i64 = i64(getIntegerValueFromJsonObject(currentPreHeaderMap, "height"))
+    // preHeaders = deleteKeyFromObject(preHeaders, key);
 
     if (highestHeight >= height) {
+      // console.log("deleting it ");
+      
       // console.log("highestHeight" + highestHeight.toString())
       // console.log("current key highest" + height.toString())
 
@@ -866,10 +869,10 @@ export function processHeaders(args: string[]): void {
       preHeaders = deleteKeyFromObject(preHeaders, key);
 
     } else {
-      console.log("highestHeight := " + highestHeight.toString())
-      console.log("current key highest := " + height.toString())
+      // console.log("highestHeight := " + highestHeight.toString())
+      // console.log("current key highest := " + height.toString())
 
-      break;
+      // break;
     }
   }
   console.log("cleared ");
@@ -882,7 +885,7 @@ export function processHeaders(args: string[]): void {
   let headerKeys = headersState.keys()
   console.log("----------------------------------------------");
   console.log("Header state after pushing the blocks ")
-  printHeaderState(headersState);
+  // printHeaderState(headersState);
 
   console.log("----------------------------------------------");
 

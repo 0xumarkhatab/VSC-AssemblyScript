@@ -460,13 +460,20 @@ void (async () => {
 
         },
         json_manipulation: {
-          deleteKeyFromObject: (obj:any,key:string) => {
-            let stringified= insta.exports.__getString(obj)
+          deleteKeyFromObject: (obj: any, key_: any) => {
+            let _key=insta.exports.__getString(key_)
+
+            let stringified = insta.exports.__getString(obj)
+            // console.log("deleteKeyFromObject called for ",stringified, " to delete ",_key);
+
             let parsed: { [key: string]: string } = JSON.parse(stringified);
+            
             // console.log("deleting");
 
             // Deleting key '3'
-            delete parsed[key];
+            delete parsed[_key];
+            // console.log("returning ",parsed);
+            
             return insta.exports.__newString(JSON.stringify(parsed))
 
           }
@@ -743,9 +750,9 @@ void (async () => {
     totalBlocksStreamed += 1;
     blockRound[totalBlocksStreamed] = header;
 
-    if (totalBlocksStreamed === 2000) {
+    if (totalBlocksStreamed ===2000) {
       // Call 'main' function and get the result
-      console.log("calling main with upto block#"+(index+1).toString());
+      console.log("calling main with upto block#" + (index + 1).toString());
 
       const result = await call('main', blockRound);
       // console.log(result.logs);
