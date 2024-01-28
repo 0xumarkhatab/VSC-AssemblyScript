@@ -15,10 +15,10 @@ import Crypto from 'crypto'
 
 import base64 from "base-64"
 import utf8 from "utf8"
-import pkg from '@summa-tx/bitcoin-spv-js';
 import { Obj } from "assemblyscript-json/assembly/JSON"
 import asc from "assemblyscript/dist/asc"
 import { BTCBlockStream } from "./bitcoin-utils"
+import pkg from '@summa-tx/bitcoin-spv-js';
 const { BTCUtils, ValidateSPV, deserializeSPVProof, } = pkg;
 
 const __filename = fileURLToPath(import.meta.url);
@@ -536,10 +536,13 @@ void (async () => {
 
             return insta.exports.__newString(prevBlock)
           },
-          retarget: (previousTarget: any, first_timestamp: any, last_timestamp: any) => {
-
-            return parseInt(BTCUtils.retargetAlgorithm(BigInt(previousTarget), first_timestamp, last_timestamp))
-
+          retarget: (previousTarget: BigInt, first_timestamp: any, last_timestamp: any) => {
+            console.log("received params ",previousTarget,first_timestamp,last_timestamp);
+            
+            let val= (BTCUtils.retargetAlgorithm((previousTarget), first_timestamp, last_timestamp))
+            console.log(val);
+            return val
+            
           },
 
           extractTimestampStr: (_decodeHex) => {
@@ -745,12 +748,12 @@ void (async () => {
   // })) 
 
 
-  for (let index = 0; index < headers.length; index++) {
+  for (let index = 0; index < 30; index++) {
     const header = headers[index];
     totalBlocksStreamed += 1;
     blockRound[totalBlocksStreamed] = header;
 
-    if (totalBlocksStreamed ===2000) {
+    if (totalBlocksStreamed ===20) {
       // Call 'main' function and get the result
       console.log("calling main with upto block#" + (index + 1).toString());
 

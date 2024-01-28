@@ -512,11 +512,17 @@ function partition(mapValues: Array<string>, mapKeys: Array<string>, low: i32, h
 let retargetBlocksModulo: i64 = 1440
 let lastRecentTimestamp: i32 = 0;
 // let totalBlocksStreamed: i64 = 0
-let latestDiff: i32 = 0;
+
+// experiment
+let latestDiff: i64 = 0xffff00000000000; // 0xffff0000000000000000000000000000000000000000000000000000
+// 0xffff000000000000
 let commulativeDiff: i64 = 0
 
 
 export function processHeaders(args: string[]): void {
+ console.log("retarget value is "+retarget(latestDiff,50000,51000).toString());
+  
+  return 
 
   var preHeaders: string = db.getObject(`pre-headers/main`)
   if (!preHeaders) {
@@ -829,6 +835,7 @@ export function processHeaders(args: string[]): void {
 
     if (_height % retargetBlocksModulo == 0) {
       // currentPreHeaderMap read it's timestamp
+      // latestDiff=0
       console.log("retarget " + " old timestamp: " + lastRecentTimestamp.toString() + " new timestamp : " + timestamp.toString());
       latestDiff = retarget(latestDiff, lastRecentTimestamp, timestamp);
       console.log("difficulty adjusted to " + latestDiff.toString());
