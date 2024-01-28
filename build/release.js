@@ -1,8 +1,12 @@
-import * as __import0 from "bitcoin";
-import * as __import1 from "sdk";
+import * as __import0 from "sdk";
+import * as __import1 from "bitcoin";
+import * as __import2 from "Date";
+import * as __import3 from "json_manipulation";
 async function instantiate(module, imports = {}) {
-  const __module0 = imports.bitcoin;
-  const __module1 = imports.sdk;
+  const __module0 = imports.sdk;
+  const __module1 = imports.bitcoin;
+  const __module2 = imports.Date;
+  const __module3 = imports.json_manipulation;
   const adaptedImports = {
     env: Object.assign(Object.create(globalThis), imports.env || {}, {
       abort(message, fileName, lineNumber, columnNumber) {
@@ -17,22 +21,83 @@ async function instantiate(module, imports = {}) {
         })();
       },
     }),
-    bitcoin: Object.assign(Object.create(__module0), {
+    sdk: Object.assign(Object.create(__module0), {
+      "db.getObject"(key) {
+        // ~lib/@vsc.eco/sdk/assembly/index/db.getObject(~lib/string/String) => ~lib/string/String
+        key = __liftString(key >>> 0);
+        return __lowerString(__module0.db.getObject(key)) || __notnull();
+      },
+      "console.log"(arg) {
+        // assembly/index/consoleLog(~lib/string/String) => void
+        arg = __liftString(arg >>> 0);
+        __module0.console.log(arg);
+      },
+      "db.setObject"(key, val) {
+        // ~lib/@vsc.eco/sdk/assembly/index/db.setObject(~lib/string/String, ~lib/string/String) => void
+        key = __liftString(key >>> 0);
+        val = __liftString(val >>> 0);
+        __module0.db.setObject(key, val);
+      },
+    }),
+    bitcoin: Object.assign(Object.create(__module1), {
+      Uint8ArrayFromBufferHex(arg0) {
+        // assembly/bitcoin/Uint8ArrayFromBufferHex(~lib/string/String) => ~lib/typedarray/Uint8Array
+        arg0 = __liftString(arg0 >>> 0);
+        return __lowerTypedArray(Uint8Array, 6, 0, __module1.Uint8ArrayFromBufferHex(arg0)) || __notnull();
+      },
+      extractPrevBlockLE(decodeHex) {
+        // assembly/bitcoin/extractPrevBlockLE(~lib/typedarray/Uint8Array) => ~lib/string/String
+        decodeHex = __liftTypedArray(Uint8Array, decodeHex >>> 0);
+        return __lowerString(__module1.extractPrevBlockLE(decodeHex)) || __notnull();
+      },
+      extractTimestampStr(decodeHex) {
+        // assembly/bitcoin/extractTimestampStr(~lib/typedarray/Uint8Array) => ~lib/string/String
+        decodeHex = __liftTypedArray(Uint8Array, decodeHex >>> 0);
+        return __lowerString(__module1.extractTimestampStr(decodeHex)) || __notnull();
+      },
+      extractMerkleRootLE(decodeHex) {
+        // assembly/bitcoin/extractMerkleRootLE(~lib/typedarray/Uint8Array) => ~lib/string/String
+        decodeHex = __liftTypedArray(Uint8Array, decodeHex >>> 0);
+        return __lowerString(__module1.extractMerkleRootLE(decodeHex)) || __notnull();
+      },
+      hash256(decodeHex) {
+        // assembly/bitcoin/hash256(~lib/typedarray/Uint8Array) => ~lib/string/String
+        decodeHex = __liftTypedArray(Uint8Array, decodeHex >>> 0);
+        return __lowerString(__module1.hash256(decodeHex)) || __notnull();
+      },
+      validateHeaderChain(decodeHex) {
+        // assembly/bitcoin/validateHeaderChain(~lib/typedarray/Uint8Array) => f64
+        decodeHex = __liftTypedArray(Uint8Array, decodeHex >>> 0);
+        return __module1.validateHeaderChain(decodeHex);
+      },
       retarget(previousTarget, first_timestamp, last_timestamp) {
         // assembly/bitcoin/retarget(i64, i32, i32) => i64
-        return __module0.retarget(previousTarget, first_timestamp, last_timestamp) || 0n;
+        return __module1.retarget(previousTarget, first_timestamp, last_timestamp) || 0n;
       },
       base64(str) {
         // assembly/bitcoin/base64(~lib/string/String) => ~lib/string/String
         str = __liftString(str >>> 0);
-        return __lowerString(__module0.base64(str)) || __notnull();
+        return __lowerString(__module1.base64(str)) || __notnull();
       },
     }),
-    sdk: Object.assign(Object.create(__module1), {
-      "console.log"(arg) {
-        // assembly/index/consoleLog(~lib/string/String) => void
-        arg = __liftString(arg >>> 0);
-        __module1.console.log(arg);
+    Date: Object.assign(Object.create(__module2), {
+      getISODate(timestamp) {
+        // assembly/Date/getISODate(~lib/string/String) => ~lib/string/String
+        timestamp = __liftString(timestamp >>> 0);
+        return __lowerString(__module2.getISODate(timestamp)) || __notnull();
+      },
+      getEpochTime(dateString) {
+        // assembly/Date/getEpochTime(~lib/string/String) => i32
+        dateString = __liftString(dateString >>> 0);
+        return __module2.getEpochTime(dateString);
+      },
+    }),
+    json_manipulation: Object.assign(Object.create(__module3), {
+      deleteKeyFromObject(obj, key) {
+        // assembly/json_manipulation/deleteKeyFromObject(~lib/string/String, ~lib/string/String) => ~lib/string/String
+        obj = __liftString(obj >>> 0);
+        key = __liftString(key >>> 0);
+        return __lowerString(__module3.deleteKeyFromObject(obj, key)) || __notnull();
       },
     }),
   };
@@ -106,6 +171,27 @@ async function instantiate(module, imports = {}) {
     exports.__unpin(header);
     return header;
   }
+  function __liftTypedArray(constructor, pointer) {
+    if (!pointer) return null;
+    return new constructor(
+      memory.buffer,
+      __getU32(pointer + 4),
+      __dataview.getUint32(pointer + 8, true) / constructor.BYTES_PER_ELEMENT
+    ).slice();
+  }
+  function __lowerTypedArray(constructor, id, align, values) {
+    if (values == null) return 0;
+    const
+      length = values.length,
+      buffer = exports.__pin(exports.__new(length << align, 1)) >>> 0,
+      header = exports.__new(12, id) >>> 0;
+    __setU32(header + 0, buffer);
+    __dataview.setUint32(header + 4, buffer, true);
+    __dataview.setUint32(header + 8, length << align, true);
+    new constructor(memory.buffer, buffer, length).set(values);
+    exports.__unpin(buffer);
+    return header;
+  }
   function __notnull() {
     throw TypeError("value must not be null");
   }
@@ -116,6 +202,14 @@ async function instantiate(module, imports = {}) {
     } catch {
       __dataview = new DataView(memory.buffer);
       __dataview.setUint32(pointer, value, true);
+    }
+  }
+  function __getU32(pointer) {
+    try {
+      return __dataview.getUint32(pointer, true);
+    } catch {
+      __dataview = new DataView(memory.buffer);
+      return __dataview.getUint32(pointer, true);
     }
   }
   return adaptedExports;
@@ -132,8 +226,10 @@ export const {
     try { return await globalThis.WebAssembly.compileStreaming(globalThis.fetch(url)); }
     catch { return globalThis.WebAssembly.compile(await (await import("node:fs/promises")).readFile(url)); }
   })(), {
-    bitcoin: __maybeDefault(__import0),
-    sdk: __maybeDefault(__import1),
+    sdk: __maybeDefault(__import0),
+    bitcoin: __maybeDefault(__import1),
+    Date: __maybeDefault(__import2),
+    json_manipulation: __maybeDefault(__import3),
   }
 ))(new URL("release.wasm", import.meta.url));
 function __maybeDefault(module) {
