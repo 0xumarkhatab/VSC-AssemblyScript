@@ -520,9 +520,9 @@ let commulativeDiff: i64 = 0
 
 
 export function processHeaders(args: string[]): void {
- console.log("retarget value is "+retarget(latestDiff,50000,51000).toString());
+//  console.log("retarget value is "+retarget(latestDiff,50000,51000).toString());
   
-  return 
+  // return 
 
   var preHeaders: string = db.getObject(`pre-headers/main`)
   if (!preHeaders) {
