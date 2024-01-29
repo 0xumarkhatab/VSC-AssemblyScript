@@ -4624,8 +4624,28 @@
   call $~lib/util/number/utoa64
   return
  )
- (func $~lib/string/String#toString (param $this i32) (result i32)
-  local.get $this
+ (func $assembly/index/calcKey (param $height i64) (result i32)
+  (local $keyA i64)
+  local.get $height
+  i32.const 100
+  i64.extend_i32_s
+  i64.div_u
+  i32.const 100
+  i64.extend_i32_s
+  i64.mul
+  local.set $keyA
+  local.get $keyA
+  i32.const 10
+  call $~lib/number/U64#toString
+  drop
+  i32.const 6688
+  drop
+  local.get $keyA
+  i32.const 100
+  i64.extend_i32_s
+  i64.add
+  i32.const 10
+  call $~lib/number/U64#toString
   return
  )
  (func $~lib/map/Map<~lib/string/String,~lib/string/String>#get:buckets (param $this i32) (result i32)
@@ -17869,152 +17889,6 @@
   local.get $20
   return
  )
- (func $assembly/index/concat (param $strings i32) (result i32)
-  (local $res i32)
-  (local $j i32)
-  (local $3 i32)
-  global.get $~lib/memory/__stack_pointer
-  i32.const 20
-  i32.sub
-  global.set $~lib/memory/__stack_pointer
-  call $~stack_check
-  global.get $~lib/memory/__stack_pointer
-  i32.const 0
-  i32.const 20
-  memory.fill
-  global.get $~lib/memory/__stack_pointer
-  i32.const 2576
-  local.tee $res
-  i32.store
-  i32.const 0
-  local.set $j
-  loop $for-loop|0
-   local.get $j
-   local.get $strings
-   local.set $3
-   global.get $~lib/memory/__stack_pointer
-   local.get $3
-   i32.store offset=4
-   local.get $3
-   call $~lib/array/Array<~lib/string/String>#get:length
-   i32.lt_s
-   if
-    global.get $~lib/memory/__stack_pointer
-    local.get $res
-    local.set $3
-    global.get $~lib/memory/__stack_pointer
-    local.get $3
-    i32.store offset=4
-    local.get $3
-    local.get $strings
-    local.set $3
-    global.get $~lib/memory/__stack_pointer
-    local.get $3
-    i32.store offset=16
-    local.get $3
-    local.get $j
-    call $~lib/array/Array<~lib/string/String>#__get
-    local.set $3
-    global.get $~lib/memory/__stack_pointer
-    local.get $3
-    i32.store offset=12
-    local.get $3
-    call $~lib/string/String#toString
-    local.set $3
-    global.get $~lib/memory/__stack_pointer
-    local.get $3
-    i32.store offset=8
-    local.get $3
-    call $~lib/string/String#concat
-    local.tee $res
-    i32.store
-    local.get $j
-    i32.const 1
-    i32.add
-    local.set $j
-    br $for-loop|0
-   end
-  end
-  local.get $res
-  local.set $3
-  global.get $~lib/memory/__stack_pointer
-  i32.const 20
-  i32.add
-  global.set $~lib/memory/__stack_pointer
-  local.get $3
-  return
- )
- (func $assembly/index/calcKey (param $height i64) (result i32)
-  (local $keyA i64)
-  (local $2 i32)
-  (local $3 i32)
-  (local $4 i32)
-  global.get $~lib/memory/__stack_pointer
-  i32.const 12
-  i32.sub
-  global.set $~lib/memory/__stack_pointer
-  call $~stack_check
-  global.get $~lib/memory/__stack_pointer
-  i64.const 0
-  i64.store
-  global.get $~lib/memory/__stack_pointer
-  i32.const 0
-  i32.store offset=8
-  local.get $height
-  i32.const 100
-  i64.extend_i32_s
-  i64.div_u
-  i32.const 100
-  i64.extend_i32_s
-  i64.mul
-  local.set $keyA
-  global.get $~lib/memory/__stack_pointer
-  i32.const 3
-  i32.const 2
-  i32.const 5
-  i32.const 0
-  call $~lib/rt/__newArray
-  local.tee $2
-  i32.store offset=4
-  global.get $~lib/memory/__stack_pointer
-  local.get $2
-  i32.load offset=4
-  local.tee $3
-  i32.store offset=8
-  local.get $2
-  i32.const 0
-  local.get $keyA
-  i32.const 10
-  call $~lib/number/U64#toString
-  call $~lib/array/Array<~lib/string/String>#__set
-  local.get $2
-  i32.const 1
-  i32.const 6688
-  call $~lib/array/Array<~lib/string/String>#__set
-  local.get $2
-  i32.const 2
-  local.get $keyA
-  i32.const 100
-  i64.extend_i32_s
-  i64.add
-  i32.const 10
-  call $~lib/number/U64#toString
-  call $~lib/array/Array<~lib/string/String>#__set
-  local.get $2
-  local.set $4
-  global.get $~lib/memory/__stack_pointer
-  local.get $4
-  i32.store
-  local.get $4
-  call $assembly/index/concat
-  local.set $4
-  global.get $~lib/memory/__stack_pointer
-  i32.const 12
-  i32.add
-  global.set $~lib/memory/__stack_pointer
-  local.get $4
-  return
- )
  (func $~lib/map/Map<~lib/string/String,~lib/string/String>#find (param $this i32) (param $key i32) (param $hashCode i32) (result i32)
   (local $entry i32)
   (local $taggedNext i32)
@@ -18786,10 +18660,10 @@
   (local $decodedHeader i32)
   (local $mapValues i32)
   (local $mapKeys i32)
-  (local $topHeader i32)
   (local $j i32)
   (local $key i32)
   (local $val i32)
+  (local $topHeader i32)
   (local $blocksToPush i32)
   (local $curDepth i64)
   (local $prevBlock|24 i32)
@@ -18819,36 +18693,32 @@
   (local $key|48 i32)
   (local $val|49 i32)
   (local $command i32)
-  (local $newMap i32)
-  (local $str i32)
-  (local $53 i32)
-  (local $state i32)
-  (local $55 i32)
+  (local $51 i32)
   global.get $~lib/memory/__stack_pointer
-  i32.const 184
+  i32.const 168
   i32.sub
   global.set $~lib/memory/__stack_pointer
   call $~stack_check
   global.get $~lib/memory/__stack_pointer
   i32.const 0
-  i32.const 184
+  i32.const 168
   memory.fill
   global.get $~lib/memory/__stack_pointer
   i32.const 544
-  local.set $55
+  local.set $51
   global.get $~lib/memory/__stack_pointer
-  local.get $55
+  local.get $51
   i32.store
-  local.get $55
+  local.get $51
   call $~lib/@vsc.eco/sdk/assembly/index/db.getObject
   local.tee $preHeaders
   i32.store offset=4
   local.get $preHeaders
-  local.set $55
+  local.set $51
   global.get $~lib/memory/__stack_pointer
-  local.get $55
+  local.get $51
   i32.store
-  local.get $55
+  local.get $51
   call $~lib/string/String.__not
   if
    global.get $~lib/memory/__stack_pointer
@@ -18861,318 +18731,321 @@
   local.tee $headers
   i32.store offset=8
   i32.const 640
-  local.set $55
+  local.set $51
   global.get $~lib/memory/__stack_pointer
-  local.get $55
+  local.get $51
   i32.store
-  local.get $55
+  local.get $51
   call $~lib/@vsc.eco/sdk/assembly/index/console.log
   i32.const 752
-  local.set $55
+  local.set $51
   global.get $~lib/memory/__stack_pointer
-  local.get $55
+  local.get $51
   i32.store offset=20
-  local.get $55
+  local.get $51
   local.get $headers
-  local.set $55
+  local.set $51
   global.get $~lib/memory/__stack_pointer
-  local.get $55
+  local.get $51
   i32.store offset=28
-  local.get $55
+  local.get $51
   call $~lib/array/Array<~lib/string/String>#get:length
   i32.const 10
   call $~lib/number/I32#toString
-  local.set $55
+  local.set $51
   global.get $~lib/memory/__stack_pointer
-  local.get $55
+  local.get $51
   i32.store offset=24
-  local.get $55
+  local.get $51
   call $~lib/string/String.__concat
-  local.set $55
+  local.set $51
   global.get $~lib/memory/__stack_pointer
-  local.get $55
+  local.get $51
   i32.store offset=12
-  local.get $55
+  local.get $51
   i32.const 2608
-  local.set $55
+  local.set $51
   global.get $~lib/memory/__stack_pointer
-  local.get $55
+  local.get $51
   i32.store offset=16
-  local.get $55
+  local.get $51
   call $~lib/string/String.__concat
-  local.set $55
+  local.set $51
   global.get $~lib/memory/__stack_pointer
-  local.get $55
+  local.get $51
   i32.store
-  local.get $55
+  local.get $51
   call $~lib/@vsc.eco/sdk/assembly/index/console.log
   i32.const 0
   local.set $i
   loop $for-loop|0
    local.get $i
    local.get $headers
-   local.set $55
+   local.set $51
    global.get $~lib/memory/__stack_pointer
-   local.get $55
+   local.get $51
    i32.store
-   local.get $55
+   local.get $51
    call $~lib/array/Array<~lib/string/String>#get:length
    i32.lt_s
    if
-    global.get $~lib/memory/__stack_pointer
-    local.get $headers
-    local.set $55
-    global.get $~lib/memory/__stack_pointer
-    local.get $55
-    i32.store
-    local.get $55
-    local.get $i
-    call $~lib/array/Array<~lib/string/String>#__get
-    local.tee $rawBH
-    i32.store offset=32
-    global.get $~lib/memory/__stack_pointer
-    local.get $rawBH
-    local.set $55
-    global.get $~lib/memory/__stack_pointer
-    local.get $55
-    i32.store
-    local.get $55
-    call $assembly/bitcoin/Uint8ArrayFromBufferHex
-    local.tee $decodeHex
-    i32.store offset=36
-    local.get $decodeHex
-    i32.const 0
-    i32.ne
-    if
+    block $for-continue|0
      global.get $~lib/memory/__stack_pointer
+     local.get $headers
+     local.set $51
+     global.get $~lib/memory/__stack_pointer
+     local.get $51
+     i32.store
+     local.get $51
+     local.get $i
+     call $~lib/array/Array<~lib/string/String>#__get
+     local.tee $rawBH
+     i32.store offset=32
+     global.get $~lib/memory/__stack_pointer
+     local.get $rawBH
+     local.set $51
+     global.get $~lib/memory/__stack_pointer
+     local.get $51
+     i32.store
+     local.get $51
+     call $assembly/bitcoin/Uint8ArrayFromBufferHex
+     local.tee $decodeHex
+     i32.store offset=36
      local.get $decodeHex
-     local.set $55
-     global.get $~lib/memory/__stack_pointer
-     local.get $55
-     i32.store
-     local.get $55
-     call $assembly/bitcoin/extractPrevBlockLE
-     local.tee $prevBlock
-     i32.store offset=40
-     local.get $prevBlock
-     local.set $55
-     global.get $~lib/memory/__stack_pointer
-     local.get $55
-     i32.store
-     local.get $55
-     i32.const 2576
-     local.set $55
-     global.get $~lib/memory/__stack_pointer
-     local.get $55
-     i32.store offset=12
-     local.get $55
-     call $~lib/string/String.__ne
+     i32.const 0
+     i32.ne
      if
-     end
-     global.get $~lib/memory/__stack_pointer
-     local.get $decodeHex
-     local.set $55
-     global.get $~lib/memory/__stack_pointer
-     local.get $55
-     i32.store
-     local.get $55
-     call $assembly/bitcoin/extractTimestampStr
-     local.tee $timestamp
-     i32.store offset=44
-     global.get $~lib/memory/__stack_pointer
-     local.get $decodeHex
-     local.set $55
-     global.get $~lib/memory/__stack_pointer
-     local.get $55
-     i32.store
-     local.get $55
-     call $assembly/bitcoin/extractMerkleRootLE
-     local.tee $merkleRoot
-     i32.store offset=48
-     global.get $~lib/memory/__stack_pointer
-     local.get $decodeHex
-     local.set $55
-     global.get $~lib/memory/__stack_pointer
-     local.get $55
-     i32.store
-     local.get $55
-     call $assembly/bitcoin/hash256
-     local.tee $headerHash
-     i32.store offset=52
-     i64.const 0
-     local.set $diff
-     local.get $decodeHex
-     local.set $55
-     global.get $~lib/memory/__stack_pointer
-     local.get $55
-     i32.store
-     local.get $55
-     call $assembly/bitcoin/validateHeaderChain
-     i64.trunc_sat_f64_u
-     local.set $diff
-     i64.const 0
-     local.set $prevDiff
-     i64.const 0
-     local.set $prevHeight
-     local.get $prevBlock
-     local.set $55
-     global.get $~lib/memory/__stack_pointer
-     local.get $55
-     i32.store
-     local.get $55
-     i32.const 2864
-     local.set $55
-     global.get $~lib/memory/__stack_pointer
-     local.get $55
-     i32.store offset=12
-     local.get $55
-     call $~lib/string/String.__eq
-     if
+      global.get $~lib/memory/__stack_pointer
+      local.get $decodeHex
+      local.set $51
+      global.get $~lib/memory/__stack_pointer
+      local.get $51
+      i32.store
+      local.get $51
+      call $assembly/bitcoin/extractPrevBlockLE
+      local.tee $prevBlock
+      i32.store offset=40
+      local.get $prevBlock
+      local.set $51
+      global.get $~lib/memory/__stack_pointer
+      local.get $51
+      i32.store
+      local.get $51
+      i32.const 2576
+      local.set $51
+      global.get $~lib/memory/__stack_pointer
+      local.get $51
+      i32.store offset=12
+      local.get $51
+      call $~lib/string/String.__ne
+      if
+      end
+      global.get $~lib/memory/__stack_pointer
+      local.get $decodeHex
+      local.set $51
+      global.get $~lib/memory/__stack_pointer
+      local.get $51
+      i32.store
+      local.get $51
+      call $assembly/bitcoin/extractTimestampStr
+      local.tee $timestamp
+      i32.store offset=44
+      global.get $~lib/memory/__stack_pointer
+      local.get $decodeHex
+      local.set $51
+      global.get $~lib/memory/__stack_pointer
+      local.get $51
+      i32.store
+      local.get $51
+      call $assembly/bitcoin/extractMerkleRootLE
+      local.tee $merkleRoot
+      i32.store offset=48
+      global.get $~lib/memory/__stack_pointer
+      local.get $decodeHex
+      local.set $51
+      global.get $~lib/memory/__stack_pointer
+      local.get $51
+      i32.store
+      local.get $51
+      call $assembly/bitcoin/hash256
+      local.tee $headerHash
+      i32.store offset=52
+      i64.const 0
+      local.set $diff
+      local.get $decodeHex
+      local.set $51
+      global.get $~lib/memory/__stack_pointer
+      local.get $51
+      i32.store
+      local.get $51
+      call $assembly/bitcoin/validateHeaderChain
+      i64.trunc_sat_f64_u
+      local.set $diff
       i64.const 0
       local.set $prevDiff
-      i64.const -1
+      i64.const 0
       local.set $prevHeight
-     else
-      local.get $preHeaders
-      local.set $55
-      global.get $~lib/memory/__stack_pointer
-      local.get $55
-      i32.store offset=12
-      local.get $55
       local.get $prevBlock
-      local.set $55
+      local.set $51
       global.get $~lib/memory/__stack_pointer
-      local.get $55
-      i32.store offset=16
-      local.get $55
-      call $assembly/index/getStringValueFromJsonObject
-      local.set $55
-      global.get $~lib/memory/__stack_pointer
-      local.get $55
+      local.get $51
       i32.store
-      local.get $55
-      call $assembly/index/isNullObject
-      i32.eqz
+      local.get $51
+      i32.const 2864
+      local.set $51
+      global.get $~lib/memory/__stack_pointer
+      local.get $51
+      i32.store offset=12
+      local.get $51
+      call $~lib/string/String.__eq
       if
-       global.get $~lib/memory/__stack_pointer
-       local.get $preHeaders
-       local.set $55
-       global.get $~lib/memory/__stack_pointer
-       local.get $55
-       i32.store
-       local.get $55
-       local.get $prevBlock
-       local.set $55
-       global.get $~lib/memory/__stack_pointer
-       local.get $55
-       i32.store offset=12
-       local.get $55
-       call $assembly/index/getStringValueFromJsonObject
-       local.tee $prevBlockVal
-       i32.store offset=56
-       local.get $prevBlockVal
-       local.set $55
-       global.get $~lib/memory/__stack_pointer
-       local.get $55
-       i32.store
-       local.get $55
-       i32.const 5504
-       local.set $55
-       global.get $~lib/memory/__stack_pointer
-       local.get $55
-       i32.store offset=12
-       local.get $55
-       call $assembly/index/getIntegerValueFromJsonObject
+       i64.const 0
        local.set $prevDiff
-       local.get $prevBlockVal
-       local.set $55
-       global.get $~lib/memory/__stack_pointer
-       local.get $55
-       i32.store
-       local.get $55
-       i32.const 5552
-       local.set $55
-       global.get $~lib/memory/__stack_pointer
-       local.get $55
-       i32.store offset=12
-       local.get $55
-       call $assembly/index/getIntegerValueFromJsonObject
+       i64.const -1
        local.set $prevHeight
       else
+       local.get $preHeaders
+       local.set $51
+       global.get $~lib/memory/__stack_pointer
+       local.get $51
+       i32.store offset=12
+       local.get $51
+       local.get $prevBlock
+       local.set $51
+       global.get $~lib/memory/__stack_pointer
+       local.get $51
+       i32.store offset=16
+       local.get $51
+       call $assembly/index/getStringValueFromJsonObject
+       local.set $51
+       global.get $~lib/memory/__stack_pointer
+       local.get $51
+       i32.store
+       local.get $51
+       call $assembly/index/isNullObject
+       i32.eqz
+       if
+        global.get $~lib/memory/__stack_pointer
+        local.get $preHeaders
+        local.set $51
+        global.get $~lib/memory/__stack_pointer
+        local.get $51
+        i32.store
+        local.get $51
+        local.get $prevBlock
+        local.set $51
+        global.get $~lib/memory/__stack_pointer
+        local.get $51
+        i32.store offset=12
+        local.get $51
+        call $assembly/index/getStringValueFromJsonObject
+        local.tee $prevBlockVal
+        i32.store offset=56
+        local.get $prevBlockVal
+        local.set $51
+        global.get $~lib/memory/__stack_pointer
+        local.get $51
+        i32.store
+        local.get $51
+        i32.const 5504
+        local.set $51
+        global.get $~lib/memory/__stack_pointer
+        local.get $51
+        i32.store offset=12
+        local.get $51
+        call $assembly/index/getIntegerValueFromJsonObject
+        local.set $prevDiff
+        local.get $prevBlockVal
+        local.set $51
+        global.get $~lib/memory/__stack_pointer
+        local.get $51
+        i32.store
+        local.get $51
+        i32.const 5552
+        local.set $51
+        global.get $~lib/memory/__stack_pointer
+        local.get $51
+        i32.store offset=12
+        local.get $51
+        call $assembly/index/getIntegerValueFromJsonObject
+        local.set $prevHeight
+       else
+        br $for-continue|0
+       end
       end
+      local.get $prevHeight
+      i64.const 1
+      i64.add
+      local.set $height
+      global.get $~lib/memory/__stack_pointer
+      i32.const 0
+      local.get $prevBlock
+      local.set $51
+      global.get $~lib/memory/__stack_pointer
+      local.get $51
+      i32.store
+      local.get $51
+      local.get $timestamp
+      local.set $51
+      global.get $~lib/memory/__stack_pointer
+      local.get $51
+      i32.store offset=24
+      local.get $51
+      call $assembly/Date/getISODate
+      local.set $51
+      global.get $~lib/memory/__stack_pointer
+      local.get $51
+      i32.store offset=12
+      local.get $51
+      local.get $merkleRoot
+      local.set $51
+      global.get $~lib/memory/__stack_pointer
+      local.get $51
+      i32.store offset=16
+      local.get $51
+      local.get $diff
+      local.get $diff
+      local.get $prevDiff
+      i64.add
+      local.get $height
+      local.get $rawBH
+      local.set $51
+      global.get $~lib/memory/__stack_pointer
+      local.get $51
+      i32.store offset=20
+      local.get $51
+      call $assembly/index/Header#constructor
+      local.tee $decodedHeader
+      i32.store offset=60
+      global.get $~lib/memory/__stack_pointer
+      local.get $preHeaders
+      local.set $51
+      global.get $~lib/memory/__stack_pointer
+      local.get $51
+      i32.store
+      local.get $51
+      local.get $headerHash
+      local.set $51
+      global.get $~lib/memory/__stack_pointer
+      local.get $51
+      i32.store offset=12
+      local.get $51
+      local.get $decodedHeader
+      local.set $51
+      global.get $~lib/memory/__stack_pointer
+      local.get $51
+      i32.store offset=20
+      local.get $51
+      call $assembly/index/Header#json
+      local.set $51
+      global.get $~lib/memory/__stack_pointer
+      local.get $51
+      i32.store offset=16
+      local.get $51
+      call $assembly/index/setValueInJsonString
+      local.tee $preHeaders
+      i32.store offset=4
      end
-     local.get $prevHeight
-     i64.const 1
-     i64.add
-     local.set $height
-     global.get $~lib/memory/__stack_pointer
-     i32.const 0
-     local.get $prevBlock
-     local.set $55
-     global.get $~lib/memory/__stack_pointer
-     local.get $55
-     i32.store
-     local.get $55
-     local.get $timestamp
-     local.set $55
-     global.get $~lib/memory/__stack_pointer
-     local.get $55
-     i32.store offset=24
-     local.get $55
-     call $assembly/Date/getISODate
-     local.set $55
-     global.get $~lib/memory/__stack_pointer
-     local.get $55
-     i32.store offset=12
-     local.get $55
-     local.get $merkleRoot
-     local.set $55
-     global.get $~lib/memory/__stack_pointer
-     local.get $55
-     i32.store offset=16
-     local.get $55
-     local.get $diff
-     local.get $diff
-     local.get $prevDiff
-     i64.add
-     local.get $height
-     local.get $rawBH
-     local.set $55
-     global.get $~lib/memory/__stack_pointer
-     local.get $55
-     i32.store offset=20
-     local.get $55
-     call $assembly/index/Header#constructor
-     local.tee $decodedHeader
-     i32.store offset=60
-     global.get $~lib/memory/__stack_pointer
-     local.get $preHeaders
-     local.set $55
-     global.get $~lib/memory/__stack_pointer
-     local.get $55
-     i32.store
-     local.get $55
-     local.get $headerHash
-     local.set $55
-     global.get $~lib/memory/__stack_pointer
-     local.get $55
-     i32.store offset=12
-     local.get $55
-     local.get $decodedHeader
-     local.set $55
-     global.get $~lib/memory/__stack_pointer
-     local.get $55
-     i32.store offset=20
-     local.get $55
-     call $assembly/index/Header#json
-     local.set $55
-     global.get $~lib/memory/__stack_pointer
-     local.get $55
-     i32.store offset=16
-     local.get $55
-     call $assembly/index/setValueInJsonString
-     local.tee $preHeaders
-     i32.store offset=4
     end
     local.get $i
     i32.const 1
@@ -19182,244 +19055,233 @@
    end
   end
   i32.const 5904
-  local.set $55
+  local.set $51
   global.get $~lib/memory/__stack_pointer
-  local.get $55
+  local.get $51
   i32.store
-  local.get $55
+  local.get $51
   call $~lib/@vsc.eco/sdk/assembly/index/console.log
   i32.const 640
-  local.set $55
+  local.set $51
   global.get $~lib/memory/__stack_pointer
-  local.get $55
+  local.get $51
   i32.store
-  local.get $55
+  local.get $51
   call $~lib/@vsc.eco/sdk/assembly/index/console.log
   i32.const 5936
-  local.set $55
+  local.set $51
   global.get $~lib/memory/__stack_pointer
-  local.get $55
+  local.get $51
   i32.store
-  local.get $55
+  local.get $51
   call $~lib/@vsc.eco/sdk/assembly/index/console.log
   global.get $~lib/memory/__stack_pointer
   local.get $preHeaders
-  local.set $55
+  local.set $51
   global.get $~lib/memory/__stack_pointer
-  local.get $55
+  local.get $51
   i32.store
-  local.get $55
+  local.get $51
   call $assembly/index/getJsonStringObjectValues
   local.tee $mapValues
   i32.store offset=64
   global.get $~lib/memory/__stack_pointer
   local.get $preHeaders
-  local.set $55
+  local.set $51
   global.get $~lib/memory/__stack_pointer
-  local.get $55
+  local.get $51
   i32.store
-  local.get $55
+  local.get $51
   call $assembly/index/getJsonStringObjectKeys
   local.tee $mapKeys
   i32.store offset=68
   i32.const 640
-  local.set $55
+  local.set $51
   global.get $~lib/memory/__stack_pointer
-  local.get $55
+  local.get $51
   i32.store
-  local.get $55
+  local.get $51
   call $~lib/@vsc.eco/sdk/assembly/index/console.log
   i32.const 6144
-  local.set $55
+  local.set $51
   global.get $~lib/memory/__stack_pointer
-  local.get $55
+  local.get $51
   i32.store offset=20
-  local.get $55
+  local.get $51
   local.get $mapValues
-  local.set $55
+  local.set $51
   global.get $~lib/memory/__stack_pointer
-  local.get $55
+  local.get $51
   i32.store offset=28
-  local.get $55
+  local.get $51
   call $~lib/array/Array<~lib/string/String>#get:length
   i32.const 10
   call $~lib/number/I32#toString
-  local.set $55
+  local.set $51
   global.get $~lib/memory/__stack_pointer
-  local.get $55
+  local.get $51
   i32.store offset=24
-  local.get $55
+  local.get $51
   call $~lib/string/String.__concat
-  local.set $55
+  local.set $51
   global.get $~lib/memory/__stack_pointer
-  local.get $55
+  local.get $51
   i32.store offset=12
-  local.get $55
+  local.get $51
   i32.const 6192
-  local.set $55
+  local.set $51
   global.get $~lib/memory/__stack_pointer
-  local.get $55
+  local.get $51
   i32.store offset=16
-  local.get $55
+  local.get $51
   call $~lib/string/String.__concat
-  local.set $55
+  local.set $51
   global.get $~lib/memory/__stack_pointer
-  local.get $55
+  local.get $51
   i32.store
-  local.get $55
+  local.get $51
   call $~lib/@vsc.eco/sdk/assembly/index/console.log
   local.get $mapValues
-  local.set $55
+  local.set $51
   global.get $~lib/memory/__stack_pointer
-  local.get $55
+  local.get $51
   i32.store
-  local.get $55
+  local.get $51
   local.get $mapKeys
-  local.set $55
+  local.set $51
   global.get $~lib/memory/__stack_pointer
-  local.get $55
+  local.get $51
   i32.store offset=12
-  local.get $55
+  local.get $51
   i32.const 0
   local.get $mapValues
-  local.set $55
+  local.set $51
   global.get $~lib/memory/__stack_pointer
-  local.get $55
+  local.get $51
   i32.store offset=16
-  local.get $55
+  local.get $51
   call $~lib/array/Array<~lib/string/String>#get:length
   i32.const 1
   i32.sub
   call $assembly/index/quicksort
   i32.const 6224
-  local.set $55
+  local.set $51
   global.get $~lib/memory/__stack_pointer
-  local.get $55
+  local.get $51
   i32.store
-  local.get $55
+  local.get $51
   call $~lib/@vsc.eco/sdk/assembly/index/console.log
   i32.const 640
-  local.set $55
+  local.set $51
   global.get $~lib/memory/__stack_pointer
-  local.get $55
+  local.get $51
   i32.store
-  local.get $55
+  local.get $51
   call $~lib/@vsc.eco/sdk/assembly/index/console.log
-  global.get $~lib/memory/__stack_pointer
-  local.get $mapKeys
-  local.set $55
-  global.get $~lib/memory/__stack_pointer
-  local.get $55
-  i32.store
-  local.get $55
-  i32.const 0
-  call $~lib/array/Array<~lib/string/String>#__get
-  local.tee $topHeader
-  i32.store offset=72
   global.get $~lib/memory/__stack_pointer
   i32.const 608
   local.tee $preHeaders
   i32.store offset=4
   i32.const 640
-  local.set $55
+  local.set $51
   global.get $~lib/memory/__stack_pointer
-  local.get $55
+  local.get $51
   i32.store
-  local.get $55
+  local.get $51
   call $~lib/@vsc.eco/sdk/assembly/index/console.log
   i32.const 752
-  local.set $55
+  local.set $51
   global.get $~lib/memory/__stack_pointer
-  local.get $55
+  local.get $51
   i32.store offset=20
-  local.get $55
+  local.get $51
   local.get $mapKeys
-  local.set $55
+  local.set $51
   global.get $~lib/memory/__stack_pointer
-  local.get $55
+  local.get $51
   i32.store offset=28
-  local.get $55
+  local.get $51
   call $~lib/array/Array<~lib/string/String>#get:length
   i32.const 10
   call $~lib/number/I32#toString
-  local.set $55
+  local.set $51
   global.get $~lib/memory/__stack_pointer
-  local.get $55
+  local.get $51
   i32.store offset=24
-  local.get $55
+  local.get $51
   call $~lib/string/String.__concat
-  local.set $55
+  local.set $51
   global.get $~lib/memory/__stack_pointer
-  local.get $55
+  local.get $51
   i32.store offset=12
-  local.get $55
+  local.get $51
   i32.const 6272
-  local.set $55
+  local.set $51
   global.get $~lib/memory/__stack_pointer
-  local.get $55
+  local.get $51
   i32.store offset=16
-  local.get $55
+  local.get $51
   call $~lib/string/String.__concat
-  local.set $55
+  local.set $51
   global.get $~lib/memory/__stack_pointer
-  local.get $55
+  local.get $51
   i32.store
-  local.get $55
+  local.get $51
   call $~lib/@vsc.eco/sdk/assembly/index/console.log
   i32.const 0
   local.set $j
   loop $for-loop|1
    local.get $j
    local.get $mapKeys
-   local.set $55
+   local.set $51
    global.get $~lib/memory/__stack_pointer
-   local.get $55
+   local.get $51
    i32.store
-   local.get $55
+   local.get $51
    call $~lib/array/Array<~lib/string/String>#get:length
    i32.lt_s
    if
     global.get $~lib/memory/__stack_pointer
     local.get $mapKeys
-    local.set $55
+    local.set $51
     global.get $~lib/memory/__stack_pointer
-    local.get $55
+    local.get $51
     i32.store
-    local.get $55
+    local.get $51
     local.get $j
     call $~lib/array/Array<~lib/string/String>#__get
     local.tee $key
-    i32.store offset=76
+    i32.store offset=72
     global.get $~lib/memory/__stack_pointer
     local.get $mapValues
-    local.set $55
+    local.set $51
     global.get $~lib/memory/__stack_pointer
-    local.get $55
+    local.get $51
     i32.store
-    local.get $55
+    local.get $51
     local.get $j
     call $~lib/array/Array<~lib/string/String>#__get
     local.tee $val
-    i32.store offset=80
+    i32.store offset=76
     global.get $~lib/memory/__stack_pointer
     local.get $preHeaders
-    local.set $55
+    local.set $51
     global.get $~lib/memory/__stack_pointer
-    local.get $55
+    local.get $51
     i32.store
-    local.get $55
+    local.get $51
     local.get $key
-    local.set $55
+    local.set $51
     global.get $~lib/memory/__stack_pointer
-    local.get $55
+    local.get $51
     i32.store offset=12
-    local.get $55
+    local.get $51
     local.get $val
-    local.set $55
+    local.set $51
     global.get $~lib/memory/__stack_pointer
-    local.get $55
+    local.get $51
     i32.store offset=16
-    local.get $55
+    local.get $51
     call $assembly/index/setValueInJsonString
     local.tee $preHeaders
     i32.store offset=4
@@ -19431,27 +19293,38 @@
    end
   end
   i32.const 5904
-  local.set $55
+  local.set $51
   global.get $~lib/memory/__stack_pointer
-  local.get $55
+  local.get $51
   i32.store
-  local.get $55
+  local.get $51
   call $~lib/@vsc.eco/sdk/assembly/index/console.log
   i32.const 640
-  local.set $55
+  local.set $51
   global.get $~lib/memory/__stack_pointer
-  local.get $55
+  local.get $51
   i32.store
-  local.get $55
+  local.get $51
   call $~lib/@vsc.eco/sdk/assembly/index/console.log
+  global.get $~lib/memory/__stack_pointer
+  local.get $mapKeys
+  local.set $51
+  global.get $~lib/memory/__stack_pointer
+  local.get $51
+  i32.store
+  local.get $51
+  i32.const 0
+  call $~lib/array/Array<~lib/string/String>#__get
+  local.tee $topHeader
+  i32.store offset=80
   global.get $~lib/memory/__stack_pointer
   i32.const 0
   local.get $mapValues
-  local.set $55
+  local.set $51
   global.get $~lib/memory/__stack_pointer
-  local.get $55
+  local.get $51
   i32.store
-  local.get $55
+  local.get $51
   call $~lib/array/Array<~lib/string/String>#get:length
   call $~lib/array/Array<~lib/string/String>#constructor
   local.tee $blocksToPush
@@ -19463,64 +19336,64 @@
   local.tee $prevBlock|24
   i32.store offset=88
   i32.const 640
-  local.set $55
+  local.set $51
   global.get $~lib/memory/__stack_pointer
-  local.get $55
+  local.get $51
   i32.store
-  local.get $55
+  local.get $51
   call $~lib/@vsc.eco/sdk/assembly/index/console.log
   i32.const 6336
-  local.set $55
+  local.set $51
   global.get $~lib/memory/__stack_pointer
-  local.get $55
+  local.get $51
   i32.store offset=28
-  local.get $55
+  local.get $51
   local.get $mapValues
-  local.set $55
+  local.set $51
   global.get $~lib/memory/__stack_pointer
-  local.get $55
+  local.get $51
   i32.store offset=96
-  local.get $55
+  local.get $51
   call $~lib/array/Array<~lib/string/String>#get:length
   i32.const 10
   call $~lib/number/I32#toString
-  local.set $55
+  local.set $51
   global.get $~lib/memory/__stack_pointer
-  local.get $55
+  local.get $51
   i32.store offset=92
-  local.get $55
+  local.get $51
   call $~lib/string/String.__concat
-  local.set $55
+  local.set $51
   global.get $~lib/memory/__stack_pointer
-  local.get $55
+  local.get $51
   i32.store offset=20
-  local.get $55
+  local.get $51
   i32.const 6384
-  local.set $55
+  local.set $51
   global.get $~lib/memory/__stack_pointer
-  local.get $55
+  local.get $51
   i32.store offset=24
-  local.get $55
+  local.get $51
   call $~lib/string/String.__concat
-  local.set $55
+  local.set $51
   global.get $~lib/memory/__stack_pointer
-  local.get $55
+  local.get $51
   i32.store offset=12
-  local.get $55
+  local.get $51
   global.get $assembly/index/validity_depth
   i32.const 10
   call $~lib/number/I32#toString
-  local.set $55
+  local.set $51
   global.get $~lib/memory/__stack_pointer
-  local.get $55
+  local.get $51
   i32.store offset=16
-  local.get $55
+  local.get $51
   call $~lib/string/String.__concat
-  local.set $55
+  local.set $51
   global.get $~lib/memory/__stack_pointer
-  local.get $55
+  local.get $51
   i32.store
-  local.get $55
+  local.get $51
   call $~lib/@vsc.eco/sdk/assembly/index/console.log
   i32.const 0
   local.set $idx
@@ -19530,28 +19403,28 @@
     if
      local.get $idx
      local.get $mapValues
-     local.set $55
+     local.set $51
      global.get $~lib/memory/__stack_pointer
-     local.get $55
+     local.get $51
      i32.store
-     local.get $55
+     local.get $51
      call $~lib/array/Array<~lib/string/String>#get:length
      i32.ge_s
      if
       br $for-break2
      end
      local.get $prevBlock|24
-     local.set $55
+     local.set $51
      global.get $~lib/memory/__stack_pointer
-     local.get $55
+     local.get $51
      i32.store
-     local.get $55
+     local.get $51
      i32.const 2576
-     local.set $55
+     local.set $51
      global.get $~lib/memory/__stack_pointer
-     local.get $55
+     local.get $51
      i32.store offset=12
-     local.get $55
+     local.get $51
      call $~lib/string/String.__eq
      if
       global.get $~lib/memory/__stack_pointer
@@ -19560,17 +19433,17 @@
       i32.store offset=88
      end
      local.get $prevBlock|24
-     local.set $55
+     local.set $51
      global.get $~lib/memory/__stack_pointer
-     local.get $55
+     local.get $51
      i32.store
-     local.get $55
+     local.get $51
      local.get $preHeaders
-     local.set $55
+     local.set $51
      global.get $~lib/memory/__stack_pointer
-     local.get $55
+     local.get $51
      i32.store offset=12
-     local.get $55
+     local.get $51
      call $assembly/index/JsonObjectMapHas
      if
       local.get $curDepth
@@ -19579,11 +19452,11 @@
       i64.gt_s
       if
        local.get $blocksToPush
-       local.set $55
+       local.set $51
        global.get $~lib/memory/__stack_pointer
-       local.get $55
+       local.get $51
        i32.store
-       local.get $55
+       local.get $51
        local.get $idx
        local.tee $26
        i32.const 1
@@ -19591,23 +19464,23 @@
        local.set $idx
        local.get $26
        local.get $preHeaders
-       local.set $55
+       local.set $51
        global.get $~lib/memory/__stack_pointer
-       local.get $55
+       local.get $51
        i32.store offset=16
-       local.get $55
+       local.get $51
        local.get $prevBlock|24
-       local.set $55
+       local.set $51
        global.get $~lib/memory/__stack_pointer
-       local.get $55
+       local.get $51
        i32.store offset=20
-       local.get $55
+       local.get $51
        call $assembly/index/getStringValueFromJsonObject
-       local.set $55
+       local.set $51
        global.get $~lib/memory/__stack_pointer
-       local.get $55
+       local.get $51
        i32.store offset=12
-       local.get $55
+       local.get $51
        call $~lib/array/Array<~lib/string/String>#__set
       else
        local.get $curDepth
@@ -19620,33 +19493,33 @@
      end
      global.get $~lib/memory/__stack_pointer
      local.get $preHeaders
-     local.set $55
+     local.set $51
      global.get $~lib/memory/__stack_pointer
-     local.get $55
+     local.get $51
      i32.store
-     local.get $55
+     local.get $51
      local.get $prevBlock|24
-     local.set $55
+     local.set $51
      global.get $~lib/memory/__stack_pointer
-     local.get $55
+     local.get $51
      i32.store offset=12
-     local.get $55
+     local.get $51
      call $assembly/index/getStringValueFromJsonObject
      local.tee $targetBlock
      i32.store offset=100
      global.get $~lib/memory/__stack_pointer
      local.get $targetBlock
-     local.set $55
+     local.set $51
      global.get $~lib/memory/__stack_pointer
-     local.get $55
+     local.get $51
      i32.store
-     local.get $55
+     local.get $51
      i32.const 5584
-     local.set $55
+     local.set $51
      global.get $~lib/memory/__stack_pointer
-     local.get $55
+     local.get $51
      i32.store offset=12
-     local.get $55
+     local.get $51
      call $assembly/index/getStringValueFromJsonObject
      local.tee $prevBlock|24
      i32.store offset=88
@@ -19656,64 +19529,64 @@
   end
   global.get $~lib/memory/__stack_pointer
   local.get $blocksToPush
-  local.set $55
+  local.set $51
   global.get $~lib/memory/__stack_pointer
-  local.get $55
+  local.get $51
   i32.store
-  local.get $55
+  local.get $51
   i32.const 0
   local.get $idx
   call $~lib/array/Array<~lib/string/String>#slice
   local.tee $blocksToPush
   i32.store offset=84
   i32.const 6448
-  local.set $55
+  local.set $51
   global.get $~lib/memory/__stack_pointer
-  local.get $55
+  local.get $51
   i32.store
-  local.get $55
+  local.get $51
   call $~lib/@vsc.eco/sdk/assembly/index/console.log
   i32.const 640
-  local.set $55
+  local.set $51
   global.get $~lib/memory/__stack_pointer
-  local.get $55
+  local.get $51
   i32.store
-  local.get $55
+  local.get $51
   call $~lib/@vsc.eco/sdk/assembly/index/console.log
   i32.const 6496
-  local.set $55
+  local.set $51
   global.get $~lib/memory/__stack_pointer
-  local.get $55
+  local.get $51
   i32.store offset=12
-  local.get $55
+  local.get $51
   local.get $idx
   i32.const 10
   call $~lib/number/I32#toString
-  local.set $55
+  local.set $51
   global.get $~lib/memory/__stack_pointer
-  local.get $55
+  local.get $51
   i32.store offset=16
-  local.get $55
+  local.get $51
   call $~lib/string/String.__concat
-  local.set $55
+  local.set $51
   global.get $~lib/memory/__stack_pointer
-  local.get $55
+  local.get $51
   i32.store
-  local.get $55
+  local.get $51
   call $~lib/@vsc.eco/sdk/assembly/index/console.log
   i32.const 640
-  local.set $55
+  local.set $51
   global.get $~lib/memory/__stack_pointer
-  local.get $55
+  local.get $51
   i32.store
-  local.get $55
+  local.get $51
   call $~lib/@vsc.eco/sdk/assembly/index/console.log
   i32.const 6560
-  local.set $55
+  local.set $51
   global.get $~lib/memory/__stack_pointer
-  local.get $55
+  local.get $51
   i32.store
-  local.get $55
+  local.get $51
   call $~lib/@vsc.eco/sdk/assembly/index/console.log
   i64.const 0
   local.set $highestHeight
@@ -19722,77 +19595,77 @@
   loop $for-loop|3
    local.get $i|29
    local.get $blocksToPush
-   local.set $55
+   local.set $51
    global.get $~lib/memory/__stack_pointer
-   local.get $55
+   local.get $51
    i32.store
-   local.get $55
+   local.get $51
    call $~lib/array/Array<~lib/string/String>#get:length
    i32.lt_s
    if
     global.get $~lib/memory/__stack_pointer
     local.get $blocksToPush
-    local.set $55
+    local.set $51
     global.get $~lib/memory/__stack_pointer
-    local.get $55
+    local.get $51
     i32.store
-    local.get $55
+    local.get $51
     local.get $i|29
     call $~lib/array/Array<~lib/string/String>#__get
     local.tee $__block
     i32.store offset=104
     local.get $__block
-    local.set $55
+    local.set $51
     global.get $~lib/memory/__stack_pointer
-    local.get $55
+    local.get $51
     i32.store
-    local.get $55
+    local.get $51
     i32.const 5552
-    local.set $55
+    local.set $51
     global.get $~lib/memory/__stack_pointer
-    local.get $55
+    local.get $51
     i32.store offset=12
-    local.get $55
+    local.get $51
     call $assembly/index/getIntegerValueFromJsonObject
     local.set $_height
     global.get $~lib/memory/__stack_pointer
     local.get $__block
-    local.set $55
+    local.set $51
     global.get $~lib/memory/__stack_pointer
-    local.get $55
+    local.get $51
     i32.store
-    local.get $55
+    local.get $51
     i32.const 5760
-    local.set $55
+    local.set $51
     global.get $~lib/memory/__stack_pointer
-    local.get $55
+    local.get $51
     i32.store offset=12
-    local.get $55
+    local.get $51
     call $assembly/index/getStringValueFromJsonObject
     local.tee $_block_raw
     i32.store offset=108
     global.get $~lib/memory/__stack_pointer
     local.get $__block
-    local.set $55
+    local.set $51
     global.get $~lib/memory/__stack_pointer
-    local.get $55
+    local.get $51
     i32.store
-    local.get $55
+    local.get $51
     i32.const 5632
-    local.set $55
+    local.set $51
     global.get $~lib/memory/__stack_pointer
-    local.get $55
+    local.get $51
     i32.store offset=12
-    local.get $55
+    local.get $51
     call $assembly/index/getStringValueFromJsonObject
     local.tee $dateString
     i32.store offset=112
     local.get $dateString
-    local.set $55
+    local.set $51
     global.get $~lib/memory/__stack_pointer
-    local.get $55
+    local.get $51
     i32.store
-    local.get $55
+    local.get $51
     call $assembly/Date/getEpochTime
     local.set $timestamp|34
     global.get $~lib/memory/__stack_pointer
@@ -19801,204 +19674,204 @@
     local.tee $key|35
     i32.store offset=116
     global.get $assembly/index/headersState
-    local.set $55
+    local.set $51
     global.get $~lib/memory/__stack_pointer
-    local.get $55
+    local.get $51
     i32.store
-    local.get $55
+    local.get $51
     local.get $key|35
-    local.set $55
+    local.set $51
     global.get $~lib/memory/__stack_pointer
-    local.get $55
+    local.get $51
     i32.store offset=12
-    local.get $55
+    local.get $51
     call $~lib/map/Map<~lib/string/String,~lib/string/String>#has
     i32.eqz
     if
      global.get $~lib/memory/__stack_pointer
      i32.const 6720
-     local.set $55
+     local.set $51
      global.get $~lib/memory/__stack_pointer
-     local.get $55
+     local.get $51
      i32.store
-     local.get $55
+     local.get $51
      local.get $key|35
-     local.set $55
+     local.set $51
      global.get $~lib/memory/__stack_pointer
-     local.get $55
+     local.get $51
      i32.store offset=12
-     local.get $55
+     local.get $51
      call $~lib/string/String.__concat
      local.tee $headerKey
      i32.store offset=120
      global.get $~lib/memory/__stack_pointer
      local.get $headerKey
-     local.set $55
+     local.set $51
      global.get $~lib/memory/__stack_pointer
-     local.get $55
+     local.get $51
      i32.store
-     local.get $55
+     local.get $51
      call $~lib/@vsc.eco/sdk/assembly/index/db.getObject
      local.tee $pullKeyHeader
      i32.store offset=124
      local.get $pullKeyHeader
-     local.set $55
+     local.set $51
      global.get $~lib/memory/__stack_pointer
-     local.get $55
+     local.get $51
      i32.store
-     local.get $55
+     local.get $51
      call $assembly/index/isNullObject
      i32.eqz
      if
       global.get $assembly/index/headersState
-      local.set $55
+      local.set $51
       global.get $~lib/memory/__stack_pointer
-      local.get $55
+      local.get $51
       i32.store
-      local.get $55
+      local.get $51
       local.get $key|35
-      local.set $55
+      local.set $51
       global.get $~lib/memory/__stack_pointer
-      local.get $55
+      local.get $51
       i32.store offset=12
-      local.get $55
+      local.get $51
       local.get $pullKeyHeader
-      local.set $55
+      local.set $51
       global.get $~lib/memory/__stack_pointer
-      local.get $55
+      local.get $51
       i32.store offset=16
-      local.get $55
+      local.get $51
       call $~lib/map/Map<~lib/string/String,~lib/string/String>#set
       drop
      else
       global.get $assembly/index/headersState
-      local.set $55
+      local.set $51
       global.get $~lib/memory/__stack_pointer
-      local.get $55
+      local.get $51
       i32.store
-      local.get $55
+      local.get $51
       local.get $key|35
-      local.set $55
+      local.set $51
       global.get $~lib/memory/__stack_pointer
-      local.get $55
+      local.get $51
       i32.store offset=12
-      local.get $55
+      local.get $51
       i32.const 608
-      local.set $55
+      local.set $51
       global.get $~lib/memory/__stack_pointer
-      local.get $55
+      local.get $51
       i32.store offset=16
-      local.get $55
+      local.get $51
       call $~lib/map/Map<~lib/string/String,~lib/string/String>#set
       drop
      end
     end
     global.get $assembly/index/headersState
-    local.set $55
+    local.set $51
     global.get $~lib/memory/__stack_pointer
-    local.get $55
+    local.get $51
     i32.store
-    local.get $55
+    local.get $51
     local.get $key|35
-    local.set $55
+    local.set $51
     global.get $~lib/memory/__stack_pointer
-    local.get $55
+    local.get $51
     i32.store offset=12
-    local.get $55
+    local.get $51
     call $~lib/map/Map<~lib/string/String,~lib/string/String>#has
     if
      global.get $~lib/memory/__stack_pointer
      global.get $assembly/index/headersState
-     local.set $55
+     local.set $51
      global.get $~lib/memory/__stack_pointer
-     local.get $55
+     local.get $51
      i32.store
-     local.get $55
+     local.get $51
      local.get $key|35
-     local.set $55
+     local.set $51
      global.get $~lib/memory/__stack_pointer
-     local.get $55
+     local.get $51
      i32.store offset=12
-     local.get $55
+     local.get $51
      call $~lib/map/Map<~lib/string/String,~lib/string/String>#get
      local.tee $h
      i32.store offset=128
      global.get $~lib/memory/__stack_pointer
      global.get $assembly/index/headersState
-     local.set $55
+     local.set $51
      global.get $~lib/memory/__stack_pointer
-     local.get $55
+     local.get $51
      i32.store
-     local.get $55
+     local.get $51
      local.get $key|35
-     local.set $55
+     local.set $51
      global.get $~lib/memory/__stack_pointer
-     local.get $55
+     local.get $51
      i32.store offset=12
-     local.get $55
+     local.get $51
      call $~lib/map/Map<~lib/string/String,~lib/string/String>#get
      local.tee $keyHeader
      i32.store offset=132
-     global.get $~lib/memory/__stack_pointer
-     local.get $keyHeader
-     local.set $55
-     global.get $~lib/memory/__stack_pointer
-     local.get $55
-     i32.store
-     local.get $55
-     local.get $_height
-     i32.const 10
-     call $~lib/number/I64#toString
-     local.set $55
-     global.get $~lib/memory/__stack_pointer
-     local.get $55
-     i32.store offset=12
-     local.get $55
-     local.get $_block_raw
-     local.set $55
-     global.get $~lib/memory/__stack_pointer
-     local.get $55
-     i32.store offset=16
-     local.get $55
-     call $assembly/index/setValueInJsonString
-     local.tee $keyHeader
-     i32.store offset=132
      local.get $h
-     local.set $55
+     local.set $51
      global.get $~lib/memory/__stack_pointer
-     local.get $55
+     local.get $51
      i32.store
-     local.get $55
+     local.get $51
      i32.const 5552
-     local.set $55
+     local.set $51
      global.get $~lib/memory/__stack_pointer
-     local.get $55
+     local.get $51
      i32.store offset=12
-     local.get $55
+     local.get $51
      call $assembly/index/getIntegerValueFromJsonObject
      local.set $heightVal
      local.get $heightVal
-     i64.const -1
-     i64.eq
+     i64.const 0
+     i64.le_s
      if
-      global.get $assembly/index/headersState
-      local.set $55
       global.get $~lib/memory/__stack_pointer
-      local.get $55
-      i32.store
-      local.get $55
-      local.get $key|35
-      local.set $55
-      global.get $~lib/memory/__stack_pointer
-      local.get $55
-      i32.store offset=12
-      local.get $55
       local.get $keyHeader
-      local.set $55
+      local.set $51
       global.get $~lib/memory/__stack_pointer
-      local.get $55
+      local.get $51
+      i32.store
+      local.get $51
+      local.get $heightVal
+      i32.const 10
+      call $~lib/number/I64#toString
+      local.set $51
+      global.get $~lib/memory/__stack_pointer
+      local.get $51
+      i32.store offset=12
+      local.get $51
+      local.get $_block_raw
+      local.set $51
+      global.get $~lib/memory/__stack_pointer
+      local.get $51
       i32.store offset=16
-      local.get $55
+      local.get $51
+      call $assembly/index/setValueInJsonString
+      local.tee $keyHeader
+      i32.store offset=132
+      global.get $assembly/index/headersState
+      local.set $51
+      global.get $~lib/memory/__stack_pointer
+      local.get $51
+      i32.store
+      local.get $51
+      local.get $key|35
+      local.set $51
+      global.get $~lib/memory/__stack_pointer
+      local.get $51
+      i32.store offset=12
+      local.get $51
+      local.get $keyHeader
+      local.set $51
+      global.get $~lib/memory/__stack_pointer
+      local.get $51
+      i32.store offset=16
+      local.get $51
       call $~lib/map/Map<~lib/string/String,~lib/string/String>#set
       drop
      end
@@ -20008,42 +19881,42 @@
     i64.lt_s
     if
      i32.const 6768
-     local.set $55
+     local.set $51
      global.get $~lib/memory/__stack_pointer
-     local.get $55
+     local.get $51
      i32.store offset=12
-     local.get $55
+     local.get $51
      local.get $highestHeight
      i32.const 10
      call $~lib/number/I64#toString
-     local.set $55
+     local.set $51
      global.get $~lib/memory/__stack_pointer
-     local.get $55
+     local.get $51
      i32.store offset=16
-     local.get $55
+     local.get $51
      call $~lib/string/String.__concat
-     local.set $55
+     local.set $51
      global.get $~lib/memory/__stack_pointer
-     local.get $55
+     local.get $51
      i32.store
-     local.get $55
+     local.get $51
      call $~lib/@vsc.eco/sdk/assembly/index/console.log
      local.get $_height
      local.set $highestHeight
     end
     global.get $assembly/index/commulativeDiff
     local.get $__block
-    local.set $55
+    local.set $51
     global.get $~lib/memory/__stack_pointer
-    local.get $55
+    local.get $51
     i32.store
-    local.get $55
+    local.get $51
     i32.const 5728
-    local.set $55
+    local.set $51
     global.get $~lib/memory/__stack_pointer
-    local.get $55
+    local.get $51
     i32.store offset=12
-    local.get $55
+    local.get $51
     call $assembly/index/getIntegerValueFromJsonObject
     i32.wrap_i64
     i64.extend_i32_s
@@ -20056,63 +19929,63 @@
     i64.eq
     if
      i32.const 6848
-     local.set $55
+     local.set $51
      global.get $~lib/memory/__stack_pointer
-     local.get $55
+     local.get $51
      i32.store offset=96
-     local.get $55
+     local.get $51
      i32.const 6896
-     local.set $55
+     local.set $51
      global.get $~lib/memory/__stack_pointer
-     local.get $55
+     local.get $51
      i32.store offset=136
-     local.get $55
+     local.get $51
      call $~lib/string/String.__concat
-     local.set $55
+     local.set $51
      global.get $~lib/memory/__stack_pointer
-     local.get $55
+     local.get $51
      i32.store offset=28
-     local.get $55
+     local.get $51
      global.get $assembly/index/lastRecentTimestamp
      i32.const 10
      call $~lib/number/I32#toString
-     local.set $55
+     local.set $51
      global.get $~lib/memory/__stack_pointer
-     local.get $55
+     local.get $51
      i32.store offset=92
-     local.get $55
+     local.get $51
      call $~lib/string/String.__concat
-     local.set $55
+     local.set $51
      global.get $~lib/memory/__stack_pointer
-     local.get $55
+     local.get $51
      i32.store offset=20
-     local.get $55
+     local.get $51
      i32.const 6960
-     local.set $55
+     local.set $51
      global.get $~lib/memory/__stack_pointer
-     local.get $55
+     local.get $51
      i32.store offset=24
-     local.get $55
+     local.get $51
      call $~lib/string/String.__concat
-     local.set $55
+     local.set $51
      global.get $~lib/memory/__stack_pointer
-     local.get $55
+     local.get $51
      i32.store offset=12
-     local.get $55
+     local.get $51
      local.get $timestamp|34
      i32.const 10
      call $~lib/number/I32#toString
-     local.set $55
+     local.set $51
      global.get $~lib/memory/__stack_pointer
-     local.get $55
+     local.get $51
      i32.store offset=16
-     local.get $55
+     local.get $51
      call $~lib/string/String.__concat
-     local.set $55
+     local.set $51
      global.get $~lib/memory/__stack_pointer
-     local.get $55
+     local.get $51
      i32.store
-     local.get $55
+     local.get $51
      call $~lib/@vsc.eco/sdk/assembly/index/console.log
      global.get $assembly/index/latestDiff
      global.get $assembly/index/lastRecentTimestamp
@@ -20120,25 +19993,25 @@
      call $assembly/bitcoin/retarget
      global.set $assembly/index/latestDiff
      i32.const 7024
-     local.set $55
+     local.set $51
      global.get $~lib/memory/__stack_pointer
-     local.get $55
+     local.get $51
      i32.store offset=12
-     local.get $55
+     local.get $51
      global.get $assembly/index/latestDiff
      i32.const 10
      call $~lib/number/I64#toString
-     local.set $55
+     local.set $51
      global.get $~lib/memory/__stack_pointer
-     local.get $55
+     local.get $51
      i32.store offset=16
-     local.get $55
+     local.get $51
      call $~lib/string/String.__concat
-     local.set $55
+     local.set $51
      global.get $~lib/memory/__stack_pointer
-     local.get $55
+     local.get $51
      i32.store
-     local.get $55
+     local.get $51
      call $~lib/@vsc.eco/sdk/assembly/index/console.log
      local.get $timestamp|34
      global.set $assembly/index/lastRecentTimestamp
@@ -20151,115 +20024,115 @@
    end
   end
   i32.const 7104
-  local.set $55
+  local.set $51
   global.get $~lib/memory/__stack_pointer
-  local.get $55
+  local.get $51
   i32.store
-  local.get $55
+  local.get $51
   call $~lib/@vsc.eco/sdk/assembly/index/console.log
   i32.const 640
-  local.set $55
+  local.set $51
   global.get $~lib/memory/__stack_pointer
-  local.get $55
+  local.get $51
   i32.store
-  local.get $55
+  local.get $51
   call $~lib/@vsc.eco/sdk/assembly/index/console.log
   global.get $~lib/memory/__stack_pointer
   local.get $preHeaders
-  local.set $55
+  local.set $51
   global.get $~lib/memory/__stack_pointer
-  local.get $55
+  local.get $51
   i32.store
-  local.get $55
+  local.get $51
   call $assembly/index/getJsonStringObjectKeys
   local.tee $preheaderKeys
   i32.store offset=140
   i32.const 640
-  local.set $55
+  local.set $51
   global.get $~lib/memory/__stack_pointer
-  local.get $55
+  local.get $51
   i32.store
-  local.get $55
+  local.get $51
   call $~lib/@vsc.eco/sdk/assembly/index/console.log
   i32.const 7200
-  local.set $55
+  local.set $51
   global.get $~lib/memory/__stack_pointer
-  local.get $55
+  local.get $51
   i32.store offset=12
-  local.get $55
+  local.get $51
   local.get $preheaderKeys
-  local.set $55
+  local.set $51
   global.get $~lib/memory/__stack_pointer
-  local.get $55
+  local.get $51
   i32.store offset=20
-  local.get $55
+  local.get $51
   call $~lib/array/Array<~lib/string/String>#get:length
   i32.const 10
   call $~lib/number/I32#toString
-  local.set $55
+  local.set $51
   global.get $~lib/memory/__stack_pointer
-  local.get $55
+  local.get $51
   i32.store offset=16
-  local.get $55
+  local.get $51
   call $~lib/string/String.__concat
-  local.set $55
+  local.set $51
   global.get $~lib/memory/__stack_pointer
-  local.get $55
+  local.get $51
   i32.store
-  local.get $55
+  local.get $51
   call $~lib/@vsc.eco/sdk/assembly/index/console.log
   i32.const 0
   local.set $i|42
   loop $for-loop|4
    local.get $i|42
    local.get $preheaderKeys
-   local.set $55
+   local.set $51
    global.get $~lib/memory/__stack_pointer
-   local.get $55
+   local.get $51
    i32.store
-   local.get $55
+   local.get $51
    call $~lib/array/Array<~lib/string/String>#get:length
    i32.lt_s
    if
     global.get $~lib/memory/__stack_pointer
     local.get $preheaderKeys
-    local.set $55
+    local.set $51
     global.get $~lib/memory/__stack_pointer
-    local.get $55
+    local.get $51
     i32.store
-    local.get $55
+    local.get $51
     local.get $i|42
     call $~lib/array/Array<~lib/string/String>#__get
     local.tee $key|43
     i32.store offset=144
     global.get $~lib/memory/__stack_pointer
     local.get $preHeaders
-    local.set $55
+    local.set $51
     global.get $~lib/memory/__stack_pointer
-    local.get $55
+    local.get $51
     i32.store
-    local.get $55
+    local.get $51
     local.get $key|43
-    local.set $55
+    local.set $51
     global.get $~lib/memory/__stack_pointer
-    local.get $55
+    local.get $51
     i32.store offset=12
-    local.get $55
+    local.get $51
     call $assembly/index/getStringValueFromJsonObject
     local.tee $currentPreHeaderMap
     i32.store offset=148
     local.get $currentPreHeaderMap
-    local.set $55
+    local.set $51
     global.get $~lib/memory/__stack_pointer
-    local.get $55
+    local.get $51
     i32.store
-    local.get $55
+    local.get $51
     i32.const 5552
-    local.set $55
+    local.set $51
     global.get $~lib/memory/__stack_pointer
-    local.get $55
+    local.get $51
     i32.store offset=12
-    local.get $55
+    local.get $51
     call $assembly/index/getIntegerValueFromJsonObject
     local.set $height|45
     local.get $highestHeight
@@ -20268,21 +20141,20 @@
     if
      global.get $~lib/memory/__stack_pointer
      local.get $preHeaders
-     local.set $55
+     local.set $51
      global.get $~lib/memory/__stack_pointer
-     local.get $55
+     local.get $51
      i32.store
-     local.get $55
+     local.get $51
      local.get $key|43
-     local.set $55
+     local.set $51
      global.get $~lib/memory/__stack_pointer
-     local.get $55
+     local.get $51
      i32.store offset=12
-     local.get $55
+     local.get $51
      call $assembly/json_manipulation/deleteKeyFromObject
      local.tee $preHeaders
      i32.store offset=4
-    else
     end
     local.get $i|42
     i32.const 1
@@ -20292,170 +20164,145 @@
    end
   end
   i32.const 7296
-  local.set $55
+  local.set $51
   global.get $~lib/memory/__stack_pointer
-  local.get $55
+  local.get $51
   i32.store
-  local.get $55
+  local.get $51
   call $~lib/@vsc.eco/sdk/assembly/index/console.log
   i32.const 640
-  local.set $55
+  local.set $51
   global.get $~lib/memory/__stack_pointer
-  local.get $55
+  local.get $51
   i32.store
-  local.get $55
+  local.get $51
   call $~lib/@vsc.eco/sdk/assembly/index/console.log
   global.get $~lib/memory/__stack_pointer
   global.get $assembly/index/headersState
-  local.set $55
+  local.set $51
   global.get $~lib/memory/__stack_pointer
-  local.get $55
+  local.get $51
   i32.store
-  local.get $55
+  local.get $51
   call $~lib/map/Map<~lib/string/String,~lib/string/String>#keys
   local.tee $headerKeys
   i32.store offset=152
   i32.const 640
-  local.set $55
+  local.set $51
   global.get $~lib/memory/__stack_pointer
-  local.get $55
+  local.get $51
   i32.store
-  local.get $55
+  local.get $51
   call $~lib/@vsc.eco/sdk/assembly/index/console.log
   i32.const 7344
-  local.set $55
+  local.set $51
   global.get $~lib/memory/__stack_pointer
-  local.get $55
+  local.get $51
   i32.store
-  local.get $55
+  local.get $51
   call $~lib/@vsc.eco/sdk/assembly/index/console.log
   i32.const 640
-  local.set $55
+  local.set $51
   global.get $~lib/memory/__stack_pointer
-  local.get $55
+  local.get $51
   i32.store
-  local.get $55
+  local.get $51
   call $~lib/@vsc.eco/sdk/assembly/index/console.log
   i32.const 7440
-  local.set $55
+  local.set $51
   global.get $~lib/memory/__stack_pointer
-  local.get $55
+  local.get $51
   i32.store offset=12
-  local.get $55
+  local.get $51
   local.get $headerKeys
-  local.set $55
+  local.set $51
   global.get $~lib/memory/__stack_pointer
-  local.get $55
+  local.get $51
   i32.store offset=20
-  local.get $55
+  local.get $51
   call $~lib/array/Array<~lib/string/String>#get:length
   i32.const 10
   call $~lib/number/I32#toString
-  local.set $55
+  local.set $51
   global.get $~lib/memory/__stack_pointer
-  local.get $55
+  local.get $51
   i32.store offset=16
-  local.get $55
+  local.get $51
   call $~lib/string/String.__concat
-  local.set $55
+  local.set $51
   global.get $~lib/memory/__stack_pointer
-  local.get $55
+  local.get $51
   i32.store
-  local.get $55
+  local.get $51
   call $~lib/@vsc.eco/sdk/assembly/index/console.log
   i32.const 0
   local.set $i|47
   loop $for-loop|5
    local.get $i|47
    local.get $headerKeys
-   local.set $55
+   local.set $51
    global.get $~lib/memory/__stack_pointer
-   local.get $55
+   local.get $51
    i32.store
-   local.get $55
+   local.get $51
    call $~lib/array/Array<~lib/string/String>#get:length
    i32.lt_s
    if
     global.get $~lib/memory/__stack_pointer
     local.get $headerKeys
-    local.set $55
+    local.set $51
     global.get $~lib/memory/__stack_pointer
-    local.get $55
+    local.get $51
     i32.store
-    local.get $55
+    local.get $51
     local.get $i|47
     call $~lib/array/Array<~lib/string/String>#__get
     local.tee $key|48
     i32.store offset=156
     global.get $~lib/memory/__stack_pointer
     local.get $preHeaders
-    local.set $55
+    local.set $51
     global.get $~lib/memory/__stack_pointer
-    local.get $55
+    local.get $51
     i32.store
-    local.get $55
+    local.get $51
     local.get $key|48
-    local.set $55
+    local.set $51
     global.get $~lib/memory/__stack_pointer
-    local.get $55
+    local.get $51
     i32.store offset=12
-    local.get $55
+    local.get $51
     call $assembly/index/getStringValueFromJsonObject
     local.tee $val|49
     i32.store offset=160
     global.get $~lib/memory/__stack_pointer
     i32.const 6720
-    local.set $55
+    local.set $51
     global.get $~lib/memory/__stack_pointer
-    local.get $55
+    local.get $51
     i32.store
-    local.get $55
+    local.get $51
     local.get $key|48
-    local.set $55
+    local.set $51
     global.get $~lib/memory/__stack_pointer
-    local.get $55
+    local.get $51
     i32.store offset=12
-    local.get $55
+    local.get $51
     call $~lib/string/String.__concat
     local.tee $command
     i32.store offset=164
-    global.get $~lib/memory/__stack_pointer
-    i32.const 0
-    call $~lib/map/Map<~lib/string/String,~lib/string/String>#constructor
-    local.tee $newMap
-    i32.store offset=168
-    local.get $newMap
-    local.set $55
-    global.get $~lib/memory/__stack_pointer
-    local.get $55
-    i32.store
-    local.get $55
-    local.get $key|48
-    local.set $55
-    global.get $~lib/memory/__stack_pointer
-    local.get $55
-    i32.store offset=12
-    local.get $55
-    local.get $val|49
-    local.set $55
-    global.get $~lib/memory/__stack_pointer
-    local.get $55
-    i32.store offset=16
-    local.get $55
-    call $~lib/map/Map<~lib/string/String,~lib/string/String>#set
-    drop
     local.get $command
-    local.set $55
+    local.set $51
     global.get $~lib/memory/__stack_pointer
-    local.get $55
+    local.get $51
     i32.store
-    local.get $55
+    local.get $51
     local.get $val|49
-    local.set $55
+    local.set $51
     global.get $~lib/memory/__stack_pointer
-    local.get $55
+    local.get $51
     i32.store offset=12
-    local.get $55
+    local.get $51
     call $~lib/@vsc.eco/sdk/assembly/index/db.setObject
     local.get $i|47
     i32.const 1
@@ -20465,79 +20312,41 @@
    end
   end
   i32.const 544
-  local.set $55
+  local.set $51
   global.get $~lib/memory/__stack_pointer
-  local.get $55
+  local.get $51
   i32.store
-  local.get $55
+  local.get $51
   local.get $preHeaders
-  local.set $55
+  local.set $51
   global.get $~lib/memory/__stack_pointer
-  local.get $55
+  local.get $51
   i32.store offset=12
-  local.get $55
+  local.get $51
   call $~lib/@vsc.eco/sdk/assembly/index/db.setObject
   i32.const 640
-  local.set $55
+  local.set $51
   global.get $~lib/memory/__stack_pointer
-  local.get $55
+  local.get $51
   i32.store
-  local.get $55
+  local.get $51
   call $~lib/@vsc.eco/sdk/assembly/index/console.log
   i32.const 7552
-  local.set $55
+  local.set $51
   global.get $~lib/memory/__stack_pointer
-  local.get $55
+  local.get $51
   i32.store
-  local.get $55
+  local.get $51
   call $~lib/@vsc.eco/sdk/assembly/index/console.log
   i32.const 7632
-  local.set $55
+  local.set $51
   global.get $~lib/memory/__stack_pointer
-  local.get $55
+  local.get $51
   i32.store
-  local.get $55
+  local.get $51
   call $~lib/@vsc.eco/sdk/assembly/index/console.log
   global.get $~lib/memory/__stack_pointer
-  global.get $~lib/memory/__stack_pointer
-  block $~lib/assemblyscript-json/assembly/JSON/parse<~lib/string/String>|inlined.8 (result i32)
-   global.get $~lib/memory/__stack_pointer
-   i32.const 544
-   local.set $55
-   global.get $~lib/memory/__stack_pointer
-   local.get $55
-   i32.store
-   local.get $55
-   call $~lib/@vsc.eco/sdk/assembly/index/db.getObject
-   local.tee $str
-   i32.store offset=172
-   local.get $str
-   local.set $55
-   global.get $~lib/memory/__stack_pointer
-   local.get $55
-   i32.store
-   local.get $55
-   call $~lib/assemblyscript-json/assembly/JSON/_JSON.parse<~lib/string/String>
-   br $~lib/assemblyscript-json/assembly/JSON/parse<~lib/string/String>|inlined.8
-  end
-  local.tee $53
-  i32.store offset=176
-  local.get $53
-  call $~instanceof|~lib/assemblyscript-json/assembly/JSON/Obj
-  if (result i32)
-   local.get $53
-  else
-   i32.const 3536
-   i32.const 5328
-   i32.const 925
-   i32.const 35
-   call $~lib/builtins/abort
-   unreachable
-  end
-  local.tee $state
-  i32.store offset=180
-  global.get $~lib/memory/__stack_pointer
-  i32.const 184
+  i32.const 168
   i32.add
   global.set $~lib/memory/__stack_pointer
  )
@@ -20911,7 +20720,7 @@
   call $~lib/@vsc.eco/sdk/assembly/index/console.log
   global.get $~lib/memory/__stack_pointer
   global.get $~lib/memory/__stack_pointer
-  block $~lib/assemblyscript-json/assembly/JSON/parse<~lib/string/String>|inlined.9 (result i32)
+  block $~lib/assemblyscript-json/assembly/JSON/parse<~lib/string/String>|inlined.8 (result i32)
    global.get $~lib/memory/__stack_pointer
    local.get $args
    local.tee $str
@@ -20923,7 +20732,7 @@
    i32.store
    local.get $10
    call $~lib/assemblyscript-json/assembly/JSON/_JSON.parse<~lib/string/String>
-   br $~lib/assemblyscript-json/assembly/JSON/parse<~lib/string/String>|inlined.9
+   br $~lib/assemblyscript-json/assembly/JSON/parse<~lib/string/String>|inlined.8
   end
   local.tee $2
   i32.store offset=8
@@ -20934,7 +20743,7 @@
   else
    i32.const 3536
    i32.const 5328
-   i32.const 991
+   i32.const 963
    i32.const 33
    call $~lib/builtins/abort
    unreachable

@@ -780,6 +780,7 @@ void (async () => {
       // Reset blockRound and totalBlocksStreamed
       blockRound = {};
       totalBlocksStreamed = 0;
+      // break;
     }
 
     // Add any other logic you need here

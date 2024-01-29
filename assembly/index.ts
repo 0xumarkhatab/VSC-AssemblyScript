@@ -61,9 +61,9 @@ function concat(strings: Array<string>): string {
 }
 function calcKey(height: u64): string {
   const cs = 100
-  const keyA = (height / cs) * cs;
+  const keyA = floor(height / cs) * cs;
 
-  return concat([keyA.toString(), "-", (keyA + cs).toString()])
+  return keyA.toString(), "-", (keyA + cs).toString()
 }
 
 
@@ -580,7 +580,7 @@ export function processHeaders(args: string[]): void {
 
 
       } else {
-        // continue;
+        continue;
       }
 
       let height = prevHeight + 1
@@ -606,21 +606,11 @@ export function processHeaders(args: string[]): void {
     }
 
 
-
-
   }
   console.log("stored");
 
   console.log("----------------------------------------------");
 
-
-  // console.log("pre-headers updated to " + preHeaders);
-  // console.log("outside headers")
-
-  // var preHeaderValues: Array<string> = preHeaders.values()
-  // var mapKeys: Array<string> = preHeaders.keys()
-
-  // printing map
 
   console.log("getting keys and values of pre-headers ");
   
@@ -639,8 +629,6 @@ export function processHeaders(args: string[]): void {
   // printStringArray(mapValues)
   // mapValues is sorted
 
-  let topHeader: string = mapKeys[0]
-  // console.log("Top header is " + topHeader);
 
 
   // console.log("modifying preHeaders");
@@ -663,7 +651,8 @@ export function processHeaders(args: string[]): void {
   // console.log("Map Now" + mapValues.length.toString())
 
   // printStringArray(mapValues)
-
+  let topHeader: string = mapKeys[0]
+  // console.log("Top header is " + topHeader);
   let blocksToPush = new Array<string>(mapValues.length)
   let curDepth: i64 = 0;
   // @ts-ignore
@@ -694,10 +683,7 @@ export function processHeaders(args: string[]): void {
 
 
     if (JsonObjectMapHas(prevBlock, preHeaders)) {
-      // console.log("pre-headers have prevBlock as " + prevBlock);
-
-      //             headersState[key] = await state.pull(`headers/${key}`) || {}
-
+ 
       if (curDepth > validity_depth) {
         blocksToPush[idx++] = getStringValueFromJsonObject(preHeaders, prevBlock)
       } else {
@@ -765,12 +751,6 @@ export function processHeaders(args: string[]): void {
 
     let timestamp = (getEpochTime(dateString))
 
-    // console.log("height is " + _height.toString());
-    // console.log("timestamp is " + timestamp.toString());
-
-    // console.log("raw is " + _block_raw);
-
-
     const key = calcKey(u64(_height))
     // console.log("key is " + key);
 
@@ -812,13 +792,14 @@ export function processHeaders(args: string[]): void {
 
       // let headerStateInstance: Header = Header.from(h.stringify())
       let keyHeader = headersState.get(key)
-      // keyHeader.set(_height.toString() + "", _block_raw);
-      keyHeader = setValueInJsonString(keyHeader, _height.toString(), _block_raw)
 
       let heightVal: i64 = getIntegerValueFromJsonObject(h, "height");
       // console.log("heightval " + heightVal.toString());
 
-      if (heightVal == -1) {
+      if (heightVal <= 0) {
+        // mistake mitigated
+        keyHeader = setValueInJsonString(keyHeader, heightVal.toString(), _block_raw)
+
         headersState.set(key, keyHeader)
       }
 
@@ -875,12 +856,8 @@ export function processHeaders(args: string[]): void {
       // preHeaders.delete(key);
       preHeaders = deleteKeyFromObject(preHeaders, key);
 
-    } else {
-      // console.log("highestHeight := " + highestHeight.toString())
-      // console.log("current key highest := " + height.toString())
+    } 
 
-      // break;
-    }
   }
   console.log("cleared ");
 
@@ -905,10 +882,6 @@ export function processHeaders(args: string[]): void {
     // console.log("setting " + key + " to " + val);
 
     let command: string = "headers/" + key;
-
-    let newMap = new Map<string, string>();
-    newMap.set(key, val);
-
     db.setObject(command, val)
     // headersState[key] = update(command,val) 
 
@@ -922,7 +895,7 @@ export function processHeaders(args: string[]): void {
 
   console.log("______________________________________");
 
-  let state: JSON.Obj = <JSON.Obj>JSON.parse(db.getObject('pre-headers/main'));
+  // let state: JSON.Obj = <JSON.Obj>JSON.parse(db.getObject('pre-headers/main'));
   // if (isNullObject(state)) {
   //   console.log("preHeaders/main is Null at the end ");
 
